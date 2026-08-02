@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace NDAi\Providers;
 
+use NDAi\Admin\ApiKeyManagerAdminPage;
 use NDAi\AiManager;
 use NDAi\RestApi\AiController;
+use NDAi\RestApi\ApiKeyController;
 use NDAi\Settings\ApiKeyStore;
 use NDAi\Tasks\ContentAssistant;
 use NDCore\Config\Config;
@@ -131,6 +133,8 @@ final class AiServiceProvider extends ServiceProvider {
 
 		$this->container->singleton( ContentAssistant::class );
 		$this->container->singleton( AiController::class );
+		$this->container->singleton( ApiKeyController::class );
+		$this->container->singleton( ApiKeyManagerAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -141,8 +145,18 @@ final class AiServiceProvider extends ServiceProvider {
 			'nd_core/rest_controllers',
 			static function ( array $controllers ): array {
 				$controllers[] = AiController::class;
+				$controllers[] = ApiKeyController::class;
 
 				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = ApiKeyManagerAdminPage::class;
+
+				return $pages;
 			}
 		);
 	}

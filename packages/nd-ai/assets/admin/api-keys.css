@@ -1,0 +1,57 @@
+.nd-ai-keys-wrap {
+	max-width: 800px;
+}
+
+.nd-ai-keys__table {
+	width: 100%;
+	border-collapse: collapse;
+	background: #fff;
+	margin-top: 12px;
+}
+
+.nd-ai-keys__table th,
+.nd-ai-keys__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid #dcdcde;
+	vertical-align: middle;
+}
+
+.nd-ai-keys__table th {
+	background: #f0f0f1;
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.nd-ai-keys__badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	font-family: Consolas, Monaco, monospace;
+}
+
+.nd-ai-keys__badge--set {
+	background: #d4f4dd;
+	color: #00641f;
+}
+
+.nd-ai-keys__badge--unset {
+	background: #f0f0f1;
+	color: #646970;
+}
+
+.nd-ai-keys__input {
+	width: 100%;
+	max-width: 260px;
+}
+
+.nd-ai-keys__actions {
+	white-space: nowrap;
+}
+
+.nd-ai-keys__error {
+	color: #d63638;
+	margin-top: 12px;
+}

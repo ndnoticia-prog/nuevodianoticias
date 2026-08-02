@@ -15,6 +15,7 @@ parameters:
             paths:
                 - src/Providers/AiServiceProvider.php
                 - src/RestApi/AiController.php
+                - src/RestApi/ApiKeyController.php
 
 # szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen
 # automáticamente vía phpstan/extension-installer (composer.json); incluirlos
