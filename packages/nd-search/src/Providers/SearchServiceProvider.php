@@ -6,10 +6,12 @@ namespace NDSearch\Providers;
 
 use NDCore\Hooks\HookManager;
 use NDCore\Providers\ServiceProvider;
+use NDSearch\Admin\SearchIndexAdminPage;
 use NDSearch\Indexing\SearchIndexer;
 use NDSearch\Migrations\CreateSearchIndexTable;
 use NDSearch\Query\SearchQueryOverride;
 use NDSearch\Repository\SearchIndexRepository;
+use NDSearch\RestApi\SearchController;
 use WP_Post;
 use WP_Query;
 
@@ -19,6 +21,8 @@ final class SearchServiceProvider extends ServiceProvider {
 		$this->container->singleton( SearchIndexRepository::class );
 		$this->container->singleton( SearchIndexer::class );
 		$this->container->singleton( SearchQueryOverride::class );
+		$this->container->singleton( SearchController::class );
+		$this->container->singleton( SearchIndexAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -64,6 +68,24 @@ final class SearchServiceProvider extends ServiceProvider {
 			},
 			10,
 			2
+		);
+
+		$hooks->addFilter(
+			'nd_core/rest_controllers',
+			static function ( array $controllers ): array {
+				$controllers[] = SearchController::class;
+
+				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = SearchIndexAdminPage::class;
+
+				return $pages;
+			}
 		);
 	}
 

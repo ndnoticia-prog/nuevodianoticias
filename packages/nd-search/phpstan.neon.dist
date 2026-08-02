@@ -18,6 +18,7 @@ parameters:
             paths:
                 - src/Query/SearchQueryOverride.php
                 - src/Repository/SearchIndexRepository.php
+                - src/RestApi/SearchController.php
 
 # szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen
 # automáticamente vía phpstan/extension-installer (composer.json); incluirlos

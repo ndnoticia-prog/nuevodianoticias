@@ -72,6 +72,34 @@ final class SearchIndexRepository {
 		return array_map( static fn ( array $row ): int => (int) $row['post_id'], $rows );
 	}
 
+	public function count(): int {
+		$table = $this->db->table( self::TABLE );
+		$row   = $this->db->selectOne( "SELECT COUNT(*) AS total FROM {$table}" );
+
+		return $row !== null ? (int) $row['total'] : 0;
+	}
+
+	/**
+	 * @return list<array{post_id: int, title: string, updated_at: string}>
+	 */
+	public function recent( int $limit = 20 ): array {
+		$table = $this->db->table( self::TABLE );
+
+		$rows = $this->db->select(
+			"SELECT post_id, title, updated_at FROM {$table} ORDER BY updated_at DESC LIMIT %d",
+			array( $limit )
+		);
+
+		return array_map(
+			static fn ( array $row ): array => array(
+				'post_id'    => (int) $row['post_id'],
+				'title'      => (string) $row['title'],
+				'updated_at' => (string) $row['updated_at'],
+			),
+			$rows
+		);
+	}
+
 	private function exists( int $postId ): bool {
 		$table = $this->db->table( self::TABLE );
 
