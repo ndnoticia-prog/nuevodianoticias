@@ -89,13 +89,27 @@ Paquete `nd-seo` (nuevo) — SEO automático:
 - `robots.txt`: directivas `Sitemap:` hacia el sitemap general de core y el de noticias.
 - Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query` reales.
 
+Paquete `nd-media` (nuevo) — optimización multimedia:
+
+- WebP/AVIF: `ModernFormatConverter` usa el filtro nativo `image_editor_output_format` (WordPress 5.8+), detectando en tiempo real si el GD del servidor soporta `imagewebp()`/`imageavif()` (degrada de AVIF a WebP, o desactiva la conversión, si no hay soporte).
+- Responsive: `ResponsiveImageSizer` sustituye el `sizes` por defecto de WordPress (basado solo en el ancho intrínseco de la imagen) por uno alineado a los breakpoints reales de nd-theme. `srcset` y lazy load (`loading="lazy"`) **no** se reimplementan: son nativos de WordPress core desde 4.4/5.5.
+- CDN: `CdnUrlRewriter` reescribe URLs de `wp-content/uploads` a un dominio configurado (`wp_get_attachment_url` + `the_content`).
+- Video: `ResponsiveEmbedWrapper` envuelve los `<iframe>` de oEmbed en un contenedor con proporción de aspecto fija (estilo en nd-theme, `.nd-video-embed`).
+- Podcast: `PodcastFeedEnhancer` extiende el feed RSS2 nativo de WordPress con el namespace de iTunes y `<enclosure>` para entradas con audio asociado, en vez de un generador de feeds propio.
+- Suite de pruebas PHPUnit (Brain Monkey), incluyendo `function_exists()` interceptado para no depender del GD real de la máquina donde corran los tests.
+
+Paquete `nd-discover` (nuevo) — requisitos técnicos de Google Discover:
+
+- `ImageSizes::FEATURED` (`nd-discover-featured`, 1200×675): WordPress core no tiene un tamaño ≥1200px de ancho por defecto (`large` se queda en 1024px), y Google exige ese mínimo para el carrusel visual grande de Discover. Se registra en `after_setup_theme`.
+- `nd-seo` (`SeoContextResolver`) y `nd-theme` (`HomeContentProvider`, solo para el hero) referencian ese nombre de tamaño como cadena literal — no como dependencia de Composer hacia nd-discover — con fallback explícito a `large` si el tamaño no existe.
+
 ### Changed
 
-- `nd-core`: `nd-seo` se añade a `require` (se empaqueta dentro del plugin) y `NDSeo\Providers\SeoServiceProvider` se registra automáticamente en la lista de providers por defecto de `Application` (protegido con `class_exists()`), siguiendo el mismo patrón que `nd-builder`.
-- `nd-theme`: `single.php`, `archive.php` y `search.php` ahora imprimen la ruta de navegación (`NDSeo\Breadcrumbs\BreadcrumbRenderer`); `nd-seo` se añade a `require-dev` (repositorio `path` local) para desarrollo/análisis estático.
+- `nd-core`: `nd-seo`, `nd-media` y `nd-discover` se añaden a `require` (se empaquetan dentro del plugin) y sus `ServiceProvider` se registran automáticamente en la lista de providers por defecto de `Application` (protegidos con `class_exists()`), siguiendo el mismo patrón que `nd-builder`.
+- `nd-theme`: `single.php`, `archive.php` y `search.php` ahora imprimen la ruta de navegación (`NDSeo\Breadcrumbs\BreadcrumbRenderer`); `nd-seo` se añade a `require-dev` (repositorio `path` local) para desarrollo/análisis estático; la imagen del bloque hero usa el tamaño de nd-discover cuando está disponible.
 
 ### Pending verification
 
 - `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController` dependen de `WP_Post`/`WP_Query` reales: necesitan pruebas de integración con WordPress real, mismo caso que `HomeContentProvider` en alpha.2.
 - Si `/sitemap-news.xml` devuelve 404 justo tras activar `nd-core`, es la limitación conocida de WordPress con rewrite rules añadidas durante la propia activación (ver "SEO" en `docs/Architecture.md`) — se resuelve guardando los enlaces permanentes una vez desde el admin.
-- `composer install && composer run check` en `nd-seo` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.
+- `composer install && composer run check` en `nd-seo`, `nd-media` y `nd-discover` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.

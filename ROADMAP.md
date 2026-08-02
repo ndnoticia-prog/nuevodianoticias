@@ -41,9 +41,11 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] `nd-core`: `nd-seo` añadido a `require` (empaquetado) y `SeoServiceProvider` registrado automáticamente en `Application`.
 - [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query` reales (`RobotsMetaBuilder`, `TwitterCardBuilder`, `OrganizationSchema`, `WebSiteSchema`, `RobotsTxtBuilder`, `SchemaOutput`, `SeoServiceProvider`).
 - [ ] Pruebas de integración con WordPress real para `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController`: dependen de `WP_Post`/`WP_Query` reales (mismo caso que `HomeContentProvider` en alpha.2).
-- [ ] `nd-media`: optimización WebP/AVIF, responsive images, lazy load.
-- [ ] `nd-discover`: requisitos técnicos adicionales de Google Discover (más allá de `max-image-preview:large`, ya cubierto por `nd-seo`): Core Web Vitals, imágenes destacadas ≥1200px.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-seo` (pendiente del mismo entorno de desarrollo que alpha.1/alpha.2).
+- [x] `nd-media`: WebP/AVIF vía el filtro nativo `image_editor_output_format` (con detección real de soporte GD); `sizes` responsive alineado a los breakpoints de nd-theme; CDN (`wp_get_attachment_url` + `the_content`); video embebido responsive (oEmbed); podcast (RSS2 `<enclosure>` + namespace de iTunes). Deliberadamente **no** reimplementa `srcset` ni lazy load: ya son nativos de WordPress core desde 4.4/5.5.
+- [x] `nd-discover`: tamaño de imagen destacada `nd-discover-featured` (1200×675, ≥1200px de ancho requerido por Discover), registrado en `after_setup_theme` y consumido por `nd-seo`/`nd-theme` como contrato de nombre de tamaño (sin acoplar esos paquetes a nd-discover).
+- [x] `nd-core`: `nd-media` y `nd-discover` añadidos a `require` (empaquetados) y sus providers registrados automáticamente en `Application`.
+- [x] Suite de pruebas PHPUnit (Brain Monkey) para `nd-media` (incluyendo `function_exists('imagewebp'/'imageavif')` interceptado para no depender del GD real de la máquina de CI) y `nd-discover`.
+- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-seo`, `nd-media` y `nd-discover` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
 
 ## v0.1.0-alpha.4 — Editorial y publicidad
 
