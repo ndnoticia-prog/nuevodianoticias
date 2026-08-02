@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NDCore;
 
+use NDBuilder\Providers\BuilderServiceProvider;
 use NDCore\Config\Config;
 use NDCore\Container\Container;
 use NDCore\Events\EventDispatcher;
@@ -117,6 +118,12 @@ final class Application extends Container
             RoutingServiceProvider::class,
             RestApiServiceProvider::class,
         ];
+
+        // nd-builder viene empaquetado dentro del vendor/ de nd-core (ver composer.json),
+        // por eso se registra aquí en lugar de requerir que cada tema lo haga.
+        if (class_exists(BuilderServiceProvider::class)) {
+            $default[] = BuilderServiceProvider::class;
+        }
 
         /** @var list<class-string<ServiceProvider>> $configured */
         $configured = $config->get('app.providers', []);

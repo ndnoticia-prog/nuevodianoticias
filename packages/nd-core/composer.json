@@ -2,6 +2,7 @@
     "name": "ndnoticia/nd-core",
     "description": "Núcleo de ND Platform: contenedor DI, aplicación, configuración, hooks, eventos, enrutamiento, REST API, base de datos, migraciones, caché, colas, scheduler, seguridad, permisos y activación.",
     "type": "wordpress-plugin",
+    "version": "0.1.0-alpha.1",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [
@@ -13,6 +14,9 @@
     "keywords": ["wordpress", "cms", "editorial", "nd-platform"],
     "minimum-stability": "stable",
     "prefer-stable": true,
+    "repositories": [
+        { "type": "path", "url": "../nd-builder" }
+    ],
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true,
@@ -27,7 +31,8 @@
     "require": {
         "php": ">=8.3",
         "psr/container": "^2.0",
-        "psr/log": "^3.0"
+        "psr/log": "^3.0",
+        "ndnoticia/nd-builder": "*"
     },
     "suggest": {
         "ext-redis": "Necesario para usar NDCore\\Cache\\Drivers\\RedisCacheDriver en producción.",
