@@ -16,7 +16,8 @@
     "prefer-stable": true,
     "repositories": [
         { "type": "path", "url": "../nd-core" },
-        { "type": "path", "url": "../nd-builder" }
+        { "type": "path", "url": "../nd-builder" },
+        { "type": "path", "url": "../nd-seo" }
     ],
     "config": {
         "optimize-autoloader": true,
@@ -34,11 +35,13 @@
     },
     "suggest": {
         "ndnoticia/nd-core": "Requerido en tiempo de ejecución (como plugin activo) para Container, HookManager y el resto de servicios de la plataforma.",
-        "ndnoticia/nd-builder": "Requerido en tiempo de ejecución (empaquetado dentro de nd-core) para Block y Renderer."
+        "ndnoticia/nd-builder": "Requerido en tiempo de ejecución (empaquetado dentro de nd-core) para Block y Renderer.",
+        "ndnoticia/nd-seo": "Requerido en tiempo de ejecución (empaquetado dentro de nd-core) para BreadcrumbRenderer."
     },
     "require-dev": {
         "ndnoticia/nd-core": "*",
         "ndnoticia/nd-builder": "*",
+        "ndnoticia/nd-seo": "*",
         "phpunit/phpunit": "^11.4",
         "mockery/mockery": "^1.6",
         "brain/monkey": "^2.6",

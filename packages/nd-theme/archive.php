@@ -10,7 +10,13 @@
  * @package NDTheme
  */
 
+use NDSeo\Breadcrumbs\BreadcrumbRenderer;
+
 get_header();
+?>
+<?php
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- BreadcrumbRenderer ya escapa cada valor internamente.
+echo nd_app(BreadcrumbRenderer::class)->render();
 ?>
 <header class="nd-archive__header">
 	<h1 class="nd-archive__title"><?php the_archive_title(); ?></h1>

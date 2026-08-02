@@ -5,7 +5,12 @@
  * @package NDTheme
  */
 
+use NDSeo\Breadcrumbs\BreadcrumbRenderer;
+
 get_header();
+
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- BreadcrumbRenderer ya escapa cada valor internamente.
+echo nd_app(BreadcrumbRenderer::class)->render();
 
 while (have_posts()) :
 	the_post();
