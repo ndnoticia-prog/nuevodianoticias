@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace NDCache\Providers;
 
+use NDCache\Admin\CachePurgeAdminPage;
 use NDCache\Invalidation\CacheInvalidator;
 use NDCache\PageCache\PageCacheMiddleware;
 use NDCache\PageCache\PageCacheStore;
+use NDCache\RestApi\CachePurgeController;
 use NDCore\Config\Config;
 use NDCore\Hooks\HookManager;
 use NDCore\Providers\ServiceProvider;
@@ -22,6 +24,8 @@ final class CacheServiceProvider extends ServiceProvider {
 		$this->container->singleton( PageCacheStore::class );
 		$this->container->singleton( PageCacheMiddleware::class );
 		$this->container->singleton( CacheInvalidator::class );
+		$this->container->singleton( CachePurgeController::class );
+		$this->container->singleton( CachePurgeAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -47,6 +51,24 @@ final class CacheServiceProvider extends ServiceProvider {
 			},
 			10,
 			2
+		);
+
+		$hooks->addFilter(
+			'nd_core/rest_controllers',
+			static function ( array $controllers ): array {
+				$controllers[] = CachePurgeController::class;
+
+				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = CachePurgeAdminPage::class;
+
+				return $pages;
+			}
 		);
 	}
 }
