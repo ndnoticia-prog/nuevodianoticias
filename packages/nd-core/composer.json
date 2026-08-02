@@ -15,7 +15,8 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "repositories": [
-        { "type": "path", "url": "../nd-builder" }
+        { "type": "path", "url": "../nd-builder" },
+        { "type": "path", "url": "../nd-seo" }
     ],
     "config": {
         "optimize-autoloader": true,
@@ -32,7 +33,8 @@
         "php": ">=8.3",
         "psr/container": "^2.0",
         "psr/log": "^3.0",
-        "ndnoticia/nd-builder": "*"
+        "ndnoticia/nd-builder": "*",
+        "ndnoticia/nd-seo": "*"
     },
     "suggest": {
         "ext-redis": "Necesario para usar NDCore\\Cache\\Drivers\\RedisCacheDriver en producción.",
