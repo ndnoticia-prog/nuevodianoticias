@@ -5,6 +5,9 @@
  * @package NDTheme
  */
 
+use NDAds\Rendering\AdZoneRenderer;
+
+$ndHeaderAd = nd_app(AdZoneRenderer::class)->render('header');
 ?>
 <header class="nd-site-header">
 	<div class="nd-site-header__bar">
@@ -38,4 +41,11 @@
 			<span aria-hidden="true">🌓</span>
 		</button>
 	</div>
+
+	<?php if ($ndHeaderAd !== '') : ?>
+		<div class="nd-ad-zone nd-ad-zone--header">
+			<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- AdRenderer/AdZoneRenderer ya generan HTML seguro a partir de campañas administradas por usuarios con capacidad MANAGE_ND_ADS. ?>
+			<?php echo $ndHeaderAd; ?>
+		</div>
+	<?php endif; ?>
 </header>

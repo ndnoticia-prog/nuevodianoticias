@@ -5,6 +5,7 @@
  * @package NDTheme
  */
 
+use NDAds\Rendering\AdZoneRenderer;
 use NDSeo\Breadcrumbs\BreadcrumbRenderer;
 
 get_header();
@@ -51,6 +52,19 @@ while (have_posts()) :
 		<div class="nd-article__content">
 			<?php the_content(); ?>
 		</div>
+
+		<?php
+		$ndInArticleAd = nd_app(AdZoneRenderer::class)->render(
+			'in-article',
+			array_map(static fn (\WP_Term $category): string => $category->slug, $categories)
+		);
+		?>
+		<?php if ($ndInArticleAd !== '') : ?>
+			<div class="nd-ad-zone nd-ad-zone--in-article">
+				<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- AdRenderer/AdZoneRenderer ya generan HTML seguro a partir de campañas administradas por usuarios con capacidad MANAGE_ND_ADS. ?>
+				<?php echo $ndInArticleAd; ?>
+			</div>
+		<?php endif; ?>
 
 		<?php
 		wp_link_pages([

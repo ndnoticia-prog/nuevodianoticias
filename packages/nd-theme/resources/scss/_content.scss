@@ -1,5 +1,34 @@
 @use 'variables' as vars;
 
+// -- Zonas de anuncios (nd-ads) -----------------------------------------
+
+.nd-ad-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: var(--nd-space-3) 0;
+  overflow-x: auto;
+
+  &--header {
+    max-width: var(--nd-max-width);
+    margin-inline: auto;
+    padding: 0 var(--nd-space-3);
+  }
+
+  &--in-article {
+    margin: var(--nd-space-4) 0;
+  }
+}
+
+.nd-ad__sponsor-label {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--nd-color-text-muted);
+  margin-bottom: var(--nd-space-1);
+}
+
 // -- Breadcrumbs ------------------------------------------------------------
 
 .nd-breadcrumbs {
