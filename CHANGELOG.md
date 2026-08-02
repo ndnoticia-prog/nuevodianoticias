@@ -113,3 +113,50 @@ Paquete `nd-discover` (nuevo) — requisitos técnicos de Google Discover:
 - `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController` dependen de `WP_Post`/`WP_Query` reales: necesitan pruebas de integración con WordPress real, mismo caso que `HomeContentProvider` en alpha.2.
 - Si `/sitemap-news.xml` devuelve 404 justo tras activar `nd-core`, es la limitación conocida de WordPress con rewrite rules añadidas durante la propia activación (ver "SEO" en `docs/Architecture.md`) — se resuelve guardando los enlaces permanentes una vez desde el admin.
 - `composer install && composer run check` en `nd-seo`, `nd-media` y `nd-discover` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.
+
+## [0.1.0-alpha.4] - Unreleased
+
+### Added
+
+Paquete `nd-workflow` (nuevo) — flujo editorial:
+
+- Estados editoriales adicionales `nd_in_review`/`nd_needs_changes` (`register_post_status()`), complementarios a los nativos de WordPress, no sustitutos.
+- Comentarios internos (`EditorialNoteRepository`, tabla propia `nd_editorial_notes`) — deliberadamente separados de los comentarios públicos nativos de WordPress.
+- Asignaciones (`AssignmentManager`, post meta `_nd_assigned_to`).
+- Datos del calendario editorial (`CalendarRepository`): artículos agrupados por día para un mes dado. Sin interfaz visual en esta versión.
+- REST: `/workflow/posts/{id}/notes` (GET/POST), `/workflow/notes/{id}` (DELETE), `/workflow/posts/{id}/assignment` (POST/DELETE), `/workflow/calendar` (GET) — todos protegidos con `Capability::EDIT_ND_WORKFLOW`.
+- Versionado y correcciones reutilizan las revisiones nativas de WordPress: no se reimplementa un sistema de versiones propio.
+
+Paquete `nd-ads` (nuevo) — motor de publicidad propio:
+
+- Campañas (`nd_ad_campaigns`) con tipo (AdSense, Google Ad Manager, HTML, imagen, video, patrocinado), prioridad, programación (`starts_at`/`ends_at`), segmentación por categoría y zona.
+- `AdRenderer`: genera el HTML de cada tipo de campaña, deliberadamente puro (sin efectos secundarios ni acceso a base de datos).
+- `AdZoneRenderer`: "seleccionar + renderizar + registrar impresión" en un único lugar, usado tanto por el shortcode `[nd_ad zone="..."]` como por las zonas fijas de nd-theme (cabecera, tras el contenido del artículo).
+- Estadísticas (`nd_ad_events`: impresiones/clics, `StatsRepository` con CTR agregado).
+- Clic con redirección resuelta en el servidor (`/nd-ads/click/{id}`): el destino se busca por ID, nunca se acepta una URL de destino por parámetro — sin riesgo de open-redirect.
+
+Paquete `nd-analytics` (nuevo) — analítica editorial propia, sin depender de Google Analytics:
+
+- `PageviewRecorder`: registro de visitas del lado del servidor (hook `wp`, sin JavaScript), excluyendo explícitamente al personal editorial (`edit_posts`) de las estadísticas.
+- `VisitorHasher`: identificador de visitante sin almacenar IP/user-agent en crudo — `wp_hash()` sobre IP+UA+fecha del día, rota diariamente.
+- `ImpressionRecorder`: impresiones de artículos mostrados en los bloques `hero`/`noticias` de portada, mediante un nuevo evento interno `NDBuilder\Events\BlockRendered` (no un hook de WordPress) que desacopla nd-analytics de nd-builder/nd-theme.
+- `AnalyticsRepository`: más leídas, "tiempo real" (consulta directa de los últimos N minutos, sin websockets), autores y categorías más vistos, CTR por artículo (pageviews vs. impresiones).
+- REST (`/analytics/top-posts`, `/analytics/active-now`, `/analytics/top-authors`, `/analytics/top-categories`, `/analytics/posts/{id}/ctr`), protegido con `Capability::VIEW_ND_ANALYTICS`.
+
+Suite de pruebas PHPUnit (Brain Monkey) en los tres paquetes para las piezas comprobables sin `WP_Post`/`WP_Query`/`$wpdb` reales.
+
+### Changed
+
+- `nd-core`: nuevo `DatabaseManager::wpTable()` para referenciar tablas nativas de WordPress (`wp_posts`, `wp_terms`, ...) desde consultas propias, distinto de `table()` (siempre con infijo `nd_`, para tablas propias de la plataforma). `nd-workflow`, `nd-ads` y `nd-analytics` se añaden a `require` (empaquetados) y sus `ServiceProvider` se registran automáticamente en `Application`.
+- `nd-builder`: `Renderer::render()` ahora despacha `NDBuilder\Events\BlockRendered` (vía `NDCore\Events\EventDispatcher`) cuando un bloque produce HTML no vacío.
+- `nd-theme`: nueva zona de anuncios en la cabecera (`template-parts/header/site-header.php`) y tras el contenido del artículo (`single.php`), usando `NDAds\Rendering\AdZoneRenderer`.
+
+### Fixed
+
+- `AdRenderer` inicialmente dependía de `StatsRecorder` (acceso a base de datos) para registrar impresiones, lo que además de mezclar renderizado con un efecto secundario lo hacía imposible de probar de forma aislada. Se separó: `AdRenderer` quedó puro y `AdZoneRenderer` (nuevo) asumió la responsabilidad de registrar la impresión.
+
+### Pending verification
+
+- Sin interfaz visual de administración (calendario arrastrable, gestor de campañas, panel de analítica): esta versión entrega la capa de datos y REST; la UI queda para una versión posterior.
+- `EditorialNoteRepository`, `CalendarRepository`, `CampaignRepository`, `StatsRecorder`/`StatsRepository`, `ClickRedirectController`, `PageviewRecorder`, `ImpressionRecorder` y `AnalyticsRepository` dependen de `DatabaseManager`/`WP_Query`/`WP_Post` reales: necesitan pruebas de integración con WordPress real, mismo caso ya documentado para `DatabaseManager`/`Migrator` en alpha.1.
+- `composer install && composer run check` en `nd-workflow`, `nd-ads` y `nd-analytics` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.

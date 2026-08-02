@@ -49,9 +49,14 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 
 ## v0.1.0-alpha.4 — Editorial y publicidad
 
-- [ ] `nd-workflow`: estados editoriales, roles, comentarios internos, calendario, asignaciones.
-- [ ] `nd-ads`: motor de anuncios (AdSense, GAM, HTML/imagen/video, patrocinados, segmentación, prioridad).
-- [ ] `nd-analytics`: analítica editorial propia (tiempo real, más leídas, CTR, panel).
+- [x] `nd-workflow`: estados editoriales adicionales (`nd_in_review`, `nd_needs_changes`) vía `register_post_status()`; comentarios internos (tabla propia `nd_editorial_notes`, deliberadamente separada de los comentarios públicos de WP); asignaciones (post meta); datos del calendario editorial (`CalendarRepository`, sin interfaz visual todavía); REST (`/workflow/posts/{id}/notes`, `/workflow/posts/{id}/assignment`, `/workflow/calendar`). Roles/capacidades ya existían desde `nd-core` (`Capability::EDIT_ND_WORKFLOW`). Versionado/correcciones reutilizan las revisiones nativas de WordPress en vez de reimplementarlas.
+- [x] `nd-ads`: motor de campañas (`nd_ad_campaigns`/`nd_ad_events`) — AdSense, Google Ad Manager, HTML, imagen, video y patrocinados; segmentación por categoría y zona; prioridad; programación (`starts_at`/`ends_at`); estadísticas (impresiones/clics/CTR); clic con redirección resuelta en servidor (`/nd-ads/click/{id}`, sin riesgo de open-redirect); shortcode `[nd_ad zone="..."]`; zonas fijas en nd-theme (cabecera, tras el contenido del artículo).
+- [x] `nd-analytics`: pageviews del lado del servidor sin JS (hook `wp`, excluye personal editorial), hash de visitante sin PII en crudo (`wp_hash` + fecha del día, rota diariamente); "tiempo real" por consulta directa de los últimos N minutos; más leídas, autores, categorías; CTR (impresiones de bloques de portada vs. pageviews) mediante un evento interno `NDBuilder\Events\BlockRendered` que desacopla nd-analytics de nd-builder/nd-theme; panel REST (`/analytics/*`) protegido con `Capability::VIEW_ND_ANALYTICS`. No depende de Google Analytics para nada de esto.
+- [x] `nd-core`: `DatabaseManager::wpTable()` (nuevo) para referenciar tablas nativas de WordPress desde consultas propias; `nd-workflow`, `nd-ads` y `nd-analytics` añadidos a `require` (empaquetados) y sus providers registrados automáticamente en `Application`.
+- [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query`/`$wpdb` reales.
+- [ ] Sin interfaz visual de administración (calendario arrastrable, gestor de campañas, panel de analítica): esta versión entrega la capa de datos y REST; la UI queda para una versión posterior.
+- [ ] Pruebas de integración con WordPress real para todo lo que depende de `DatabaseManager`/`WP_Query`/`WP_Post` (`EditorialNoteRepository`, `CalendarRepository`, `CampaignRepository`, `StatsRecorder`/`StatsRepository`, `ClickRedirectController`, `PageviewRecorder`, `ImpressionRecorder`, `AnalyticsRepository`): mismo caso ya documentado para `DatabaseManager`/`Migrator` en alpha.1.
+- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-workflow`, `nd-ads` y `nd-analytics` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
 
 ## v0.1.0-alpha.5 — IA y búsqueda
 

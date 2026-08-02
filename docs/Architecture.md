@@ -108,3 +108,32 @@ Regla práctica: si un paquete B es consumido en tiempo de ejecución por un paq
 ## Plantillas de tema: evitar duplicar la jerarquía de WordPress
 
 `nd-theme` no define `category.php`, `tag.php` ni `author.php` por separado. `archive.php` es el *fallback* que WordPress usa automáticamente para esos tres contextos (además de archivos por fecha y por tipo de contenido), y las funciones nativas `the_archive_title()` / `the_archive_description()` ya adaptan su salida a cada uno (incluyendo la biografía del autor). Crear tres archivos casi idénticos a `archive.php` solo duplicaría la misma cuadrícula sin aportar nada; `archive.php` añade la única pieza que sí es distinta por contexto (el avatar cuando `is_author()`).
+
+## Comunicación entre paquetes sin acoplarlos: eventos internos
+
+`NDCore\Events\EventDispatcher` (ver "Hooks vs. Events" arriba) existe precisamente para casos como este: `nd-analytics` necesita saber qué artículos aparecieron en los bloques `hero`/`noticias` de la portada para calcular impresiones y CTR, pero `nd-builder` no debe conocer la existencia de `nd-analytics`.
+
+La solución: `NDBuilder\Renderer::render()` despacha un evento interno `NDBuilder\Events\BlockRendered` (con el `Block` y el HTML resultante) cada vez que un bloque produce salida no vacía — **no** es un hook de WordPress, es puro bus de eventos de la plataforma. `NDAnalytics\Providers\AnalyticsServiceProvider` se suscribe a `BlockRendered` en su `boot()` y registra una impresión por cada `post_id` presente en el bloque. Ni nd-builder ni nd-theme importan una sola clase de nd-analytics; si nd-analytics no está instalado, `dispatch()` simplemente no tiene listeners y no ocurre nada.
+
+## nd-workflow: qué es nuevo y qué reutiliza de WordPress core
+
+- **Comentarios internos**: tabla propia (`nd_editorial_notes`), deliberadamente separada de la tabla nativa de comentarios de WordPress (pensada para comentarios públicos de lectores, con su propio flujo de moderación/spam que no aplica aquí).
+- **Estados editoriales**: `nd_in_review`/`nd_needs_changes` se registran con `register_post_status()` como estados *adicionales* a los nativos de WordPress (`draft`, `pending`, `publish`, ...), no los sustituyen.
+- **Correcciones y versionado**: nd-workflow **no** reimplementa el versionado de contenido — WordPress core ya guarda revisiones completas de cada edición (`wp_postmeta`/tabla de revisiones) de forma nativa. Una "solicitud de corrección" se modela como una nota editorial con `type = correction_request`, no como un sistema de versiones paralelo.
+- **Calendario**: `NDWorkflow\Calendar\CalendarRepository` es solo la capa de datos (qué artículos caen en qué día de un mes, vía `WP_Query`); una interfaz visual de calendario queda fuera del alcance de esta versión — ver "Pendiente" en el CHANGELOG.
+- **Asignaciones**: post meta (`_nd_assigned_to`) en lugar de una tabla propia: es una relación 1:1 simple que post meta ya resuelve e indexa.
+
+## nd-ads: por qué el HTML del anuncio vive en el paquete, no en el tema
+
+A diferencia de nd-builder (cuyo HTML de bloques editoriales vive siempre en `nd-theme`), `NDAds\Rendering\AdRenderer` genera su propio HTML. Los formatos de anuncio (snippet de AdSense, definición de slot de GAM, `<video>`, ...) son prácticamente estándar entre proveedores y no son "presentación editorial" específica de un tema: que nd-ads los genere garantiza que cualquier tema que use ND Platform sirva anuncios de forma correcta y consistente sin tener que reimplementar esos formatos.
+
+`AdRenderer` es deliberadamente puro (Campaña → HTML, sin efectos secundarios ni acceso a base de datos): registrar la impresión es responsabilidad de `NDAds\Rendering\AdZoneRenderer`, que además es el único punto que usan tanto el shortcode `[nd_ad zone="..."]` como las zonas fijas de nd-theme (cabecera, tras el contenido del artículo), evitando duplicar la secuencia "seleccionar → renderizar → registrar impresión".
+
+El clic (`/nd-ads/click/{id}`) resuelve el destino de la campaña **en el servidor**, a partir del ID — nunca acepta una URL de destino por parámetro de la petición — para que no exista ninguna forma de construir un enlace de open-redirect a través de este endpoint.
+
+## nd-analytics: privacidad y "tiempo real" sin fabricar infraestructura que no existe
+
+- **Sin PII en crudo**: `NDAnalytics\Tracking\VisitorHasher` nunca almacena la IP ni el user agent: los combina con la fecha del día y los pasa por `wp_hash()` (HMAC con las claves secretas de esta instalación). El hash resultante rota cada día, así que no permite reconstruir la IP original ni correlacionar a la misma persona más allá de una jornada.
+- **Registro del lado del servidor**: `PageviewRecorder` se ejecuta en el hook `wp` (una vez resuelta la consulta principal) para cada artículo, sin necesidad de JavaScript ni depender de que el visitante no tenga bloqueadores activos. Excluye explícitamente a usuarios con `edit_posts` (personal editorial) para no contaminar las estadísticas con su propio tráfico.
+- **"Tiempo real" honesto**: no hay websockets ni un proceso en segundo plano — `AnalyticsRepository::activeNow()` consulta directamente los últimos N minutos de la tabla de pageviews en el momento de la petición. El dato mostrado es, en efecto, el más reciente posible; sencillamente no se empuja al cliente sin que lo pida.
+- **`DatabaseManager::wpTable()`** (nuevo en nd-core): distinto de `table()` (que siempre añade el infijo `nd_` para tablas propias), permite referenciar tablas *nativas* de WordPress (`wp_posts`, `wp_terms`, ...) para los `JOIN` que necesitan `topAuthors()`/`topCategories()`.

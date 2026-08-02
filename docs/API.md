@@ -15,13 +15,29 @@
 |---|---|---|---|
 | `GET` | `/wp-json/nd/v1/system/status` | Health-check de la plataforma: versión de `nd-core`, paquetes activos, estado de caché/cola. | Público (sin datos sensibles) |
 
+## Endpoints — v0.1.0-alpha.4
+
+| Método | Ruta | Descripción | Permiso |
+|---|---|---|---|
+| `GET` | `/wp-json/nd/v1/workflow/posts/{id}/notes` | Lista los comentarios internos de un artículo. | `edit_nd_workflow` |
+| `POST` | `/wp-json/nd/v1/workflow/posts/{id}/notes` | Crea un comentario interno (`body`, `type` opcional: `note`/`correction_request`). | `edit_nd_workflow` |
+| `DELETE` | `/wp-json/nd/v1/workflow/notes/{id}` | Elimina un comentario interno. | `edit_nd_workflow` |
+| `POST` | `/wp-json/nd/v1/workflow/posts/{id}/assignment` | Asigna un artículo a un usuario (`user_id`). | `edit_nd_workflow` |
+| `DELETE` | `/wp-json/nd/v1/workflow/posts/{id}/assignment` | Quita la asignación de un artículo. | `edit_nd_workflow` |
+| `GET` | `/wp-json/nd/v1/workflow/calendar?year=&month=` | Artículos agrupados por día para el calendario editorial (solo datos; sin interfaz visual en esta versión). | `edit_nd_workflow` |
+| `GET` | `/wp-json/nd/v1/analytics/top-posts?days=&limit=` | Más leídos en los últimos N días. | `view_nd_analytics` |
+| `GET` | `/wp-json/nd/v1/analytics/active-now?minutes=` | Visitantes únicos y artículos más vistos en los últimos N minutos ("tiempo real" por consulta directa, sin websockets). | `view_nd_analytics` |
+| `GET` | `/wp-json/nd/v1/analytics/top-authors?days=` | Vistas agregadas por autor. | `view_nd_analytics` |
+| `GET` | `/wp-json/nd/v1/analytics/top-categories?days=` | Vistas agregadas por categoría. | `view_nd_analytics` |
+| `GET` | `/wp-json/nd/v1/analytics/posts/{id}/ctr?days=` | CTR de un artículo: pageviews vs. impresiones en bloques de portada. | `view_nd_analytics` |
+
+`nd-ads` no expone endpoints REST: el clic en un anuncio se registra y redirige vía la ruta reescrita `/nd-ads/click/{id}` (no JSON, ver `docs/Architecture.md`).
+
 ## Endpoints planificados (versiones posteriores)
 
 Estos endpoints se documentarán aquí en el momento en que se implementen (no antes), siguiendo la regla de "nunca documentar código que no existe":
 
-- `nd/v1/content/*` — CRUD editorial (nd-workflow).
-- `nd/v1/ads/*` — gestión de campañas (nd-ads).
-- `nd/v1/analytics/*` — métricas editoriales (nd-analytics).
+- `nd/v1/ads/campaigns/*` — CRUD de campañas publicitarias (nd-ads), para un futuro panel de administración.
 - `nd/v1/ai/*` — generación asistida de contenido (nd-ai).
 - `nd/v1/search/*` — búsqueda interna (nd-search).
 
