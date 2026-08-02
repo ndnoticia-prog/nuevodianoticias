@@ -1,0 +1,110 @@
+.nd-workflow-calendar-wrap {
+	max-width: 1200px;
+}
+
+.nd-workflow-calendar__toolbar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 16px 0;
+}
+
+.nd-workflow-calendar__toolbar h2 {
+	margin: 0;
+	min-width: 200px;
+	text-align: center;
+}
+
+.nd-workflow-calendar__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1px;
+	background: #dcdcde;
+	border: 1px solid #dcdcde;
+}
+
+.nd-workflow-calendar__weekday {
+	background: #f0f0f1;
+	padding: 8px;
+	font-weight: 600;
+	text-align: center;
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.nd-workflow-calendar__day {
+	background: #fff;
+	min-height: 110px;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.nd-workflow-calendar__day--outside {
+	background: #f6f7f7;
+	opacity: 0.6;
+}
+
+.nd-workflow-calendar__day--dragover {
+	background: #e5f5fa;
+	outline: 2px dashed #2271b1;
+	outline-offset: -2px;
+}
+
+.nd-workflow-calendar__day-number {
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.nd-workflow-calendar__item {
+	background: #f6f7f7;
+	border-left: 3px solid #787c82;
+	border-radius: 2px;
+	padding: 4px 6px;
+	font-size: 12px;
+	line-height: 1.4;
+	cursor: grab;
+}
+
+.nd-workflow-calendar__item:active {
+	cursor: grabbing;
+}
+
+.nd-workflow-calendar__item--dragging {
+	opacity: 0.4;
+}
+
+.nd-workflow-calendar__item a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.nd-workflow-calendar__item a:hover {
+	text-decoration: underline;
+}
+
+.nd-workflow-calendar__item[data-status="publish"] {
+	border-left-color: #00a32a;
+}
+
+.nd-workflow-calendar__item[data-status="future"] {
+	border-left-color: #2271b1;
+}
+
+.nd-workflow-calendar__item[data-status="draft"] {
+	border-left-color: #787c82;
+}
+
+.nd-workflow-calendar__item[data-status="nd_in_review"] {
+	border-left-color: #dba617;
+}
+
+.nd-workflow-calendar__item[data-status="nd_needs_changes"] {
+	border-left-color: #d63638;
+}
+
+.nd-workflow-calendar__error {
+	color: #d63638;
+}

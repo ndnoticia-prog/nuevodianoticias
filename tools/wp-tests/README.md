@@ -44,6 +44,28 @@ Cada paquete localiza el checkout compartido automáticamente (dos niveles por e
 WP_TESTS_DIR=/ruta/a/otro/checkout composer test:integration
 ```
 
+## Sitio de WordPress real para verificar cambios de admin en el navegador
+
+`wordpress-develop/src` no sirve para esto: es un checkout de desarrollo sin compilar (necesita `npm run build`, que no está instalado aquí). Para probar visualmente páginas de admin (calendario, paneles, etc.) se usa una descarga normal de WordPress:
+
+```bash
+mkdir -p tools/wp-tests/wordpress-site && cd tools/wp-tests/wordpress-site
+curl -sL https://wordpress.org/latest.tar.gz -o wp.tar.gz
+tar -xzf wp.tar.gz --strip-components=1 && rm wp.tar.gz
+
+ln -sfn "$(pwd)/../../../packages/nd-core" wp-content/plugins/nd-core
+ln -sfn "$(pwd)/../../../packages/nd-theme" wp-content/themes/nd-theme
+```
+
+Crear una base de datos separada de la de pruebas (`wp_browse_dev`, por ejemplo) y un `wp-config.php` con esas credenciales (ver `wp-tests-config.php` como referencia de formato). Levantar con el servidor embebido de PHP y completar la instalación desde el navegador:
+
+```bash
+cd tools/wp-tests/wordpress-site && php -S localhost:8890
+# abrir http://localhost:8890/ y seguir el asistente de instalación
+```
+
+No se commitea (`tools/wp-tests/wordpress-site/` está en `.gitignore`): es un WordPress real descargado, no código fuente del proyecto.
+
 ## Por qué no `wp-env` (Docker)
 
 `wp-env` es la forma recomendada por WordPress.org para pruebas de integración, pero requiere Docker Desktop. Este entorno de desarrollo no tiene Docker disponible, así que se usa el flujo "clásico" (antes basado en `svn`, aquí con `git sparse-checkout` porque `svn` tampoco está disponible) documentado directamente por el propio arnés de pruebas de WordPress. El resultado es equivalente: mismo núcleo de WordPress, mismo `WP_UnitTestCase`, misma base de datos real.

@@ -47,3 +47,5 @@ npm-debug.log*
 
 # WordPress test scaffolding (checkout compartido, ~180MB — ver tools/wp-tests/README.md)
 /tools/wp-tests/wordpress-develop/
+# Instalación real de WordPress para verificación manual en navegador (ver tools/wp-tests/README.md)
+/tools/wp-tests/wordpress-site/

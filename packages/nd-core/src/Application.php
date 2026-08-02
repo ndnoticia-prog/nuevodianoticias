@@ -13,6 +13,7 @@ use NDCore\Config\Config;
 use NDCore\Container\Container;
 use NDCore\Events\EventDispatcher;
 use NDCore\Hooks\HookManager;
+use NDCore\Providers\AdminMenuServiceProvider;
 use NDCore\Providers\CoreServiceProvider;
 use NDCore\Providers\RestApiServiceProvider;
 use NDCore\Providers\RoutingServiceProvider;
@@ -118,6 +119,7 @@ final class Application extends Container {
 			CoreServiceProvider::class,
 			RoutingServiceProvider::class,
 			RestApiServiceProvider::class,
+			AdminMenuServiceProvider::class,
 		);
 
 		// nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads,

@@ -6,6 +6,7 @@ namespace NDWorkflow\Providers;
 
 use NDCore\Hooks\HookManager;
 use NDCore\Providers\ServiceProvider;
+use NDWorkflow\Admin\CalendarAdminPage;
 use NDWorkflow\Assignments\AssignmentManager;
 use NDWorkflow\Calendar\CalendarRepository;
 use NDWorkflow\Migrations\CreateEditorialNotesTable;
@@ -26,6 +27,7 @@ final class WorkflowServiceProvider extends ServiceProvider {
 		$this->container->singleton( NotesController::class );
 		$this->container->singleton( AssignmentController::class );
 		$this->container->singleton( CalendarController::class );
+		$this->container->singleton( CalendarAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -49,6 +51,15 @@ final class WorkflowServiceProvider extends ServiceProvider {
 				$controllers[] = CalendarController::class;
 
 				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = CalendarAdminPage::class;
+
+				return $pages;
 			}
 		);
 	}
