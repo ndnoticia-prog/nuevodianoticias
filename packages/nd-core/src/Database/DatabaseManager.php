@@ -144,7 +144,13 @@ final class DatabaseManager {
 		// @phpstan-ignore argument.type
 		$prepared = $this->wpdb->prepare( $query, $bindings );
 
-		if ( $prepared === null ) {
+		// wpdb::prepare() devuelve null cuando detecta un error de
+		// programación grave (p. ej. un placeholder usado como Identifier
+		// y como Value a la vez), pero devuelve '' (cadena vacía) cuando
+		// faltan bindings para los placeholders de la consulta —
+		// "para evitar un fatal error en PHP 8", según su propio código—.
+		// Ambos casos son una consulta rota que nunca debe ejecutarse.
+		if ( $prepared === null || $prepared === '' ) {
 			throw new RuntimeException( 'No se pudo preparar la consulta SQL: los parámetros no coinciden con los marcadores de posición.' );
 		}
 

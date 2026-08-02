@@ -58,6 +58,14 @@
         <exclude-pattern>src/Database/DatabaseManager.php</exclude-pattern>
     </rule>
     <!--
+    Los fixtures de las pruebas de integración crean/eliminan tablas de
+    prueba directamente con $wpdb->query() (CREATE/DROP TABLE nunca admiten
+    placeholders, con o sin dbDelta()) — mismo caso que DatabaseManager.php.
+    -->
+    <rule ref="WordPress.DB.PreparedSQL">
+        <exclude-pattern>tests/Integration/*</exclude-pattern>
+    </rule>
+    <!--
     Encryption.php usa base64 como codificación de transporte para el
     resultado de sodium_crypto_secretbox, no como ofuscación.
     -->

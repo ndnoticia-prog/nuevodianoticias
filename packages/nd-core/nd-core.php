@@ -64,26 +64,33 @@ function deactivateSelfWithNotice( string $message ): void {
 	}
 }
 
-$autoloader = NDCORE_PLUGIN_DIR . 'vendor/autoload.php';
+if ( ! class_exists( 'NDCore\\Application' ) ) {
+	$autoloader = NDCORE_PLUGIN_DIR . 'vendor/autoload.php';
 
-if ( ! file_exists( $autoloader ) ) {
-	add_action(
-		'admin_notices',
-		static function (): void {
-			printf(
-				'<div class="notice notice-error"><p>%s</p></div>',
-				esc_html__(
-					'ND Core: faltan las dependencias de Composer. Ejecuta "composer install" en el directorio del plugin.',
-					'nd-core'
-				)
-			);
-		}
-	);
+	if ( ! file_exists( $autoloader ) ) {
+		add_action(
+			'admin_notices',
+			static function (): void {
+				printf(
+					'<div class="notice notice-error"><p>%s</p></div>',
+					esc_html__(
+						'ND Core: faltan las dependencias de Composer. Ejecuta "composer install" en el directorio del plugin.',
+						'nd-core'
+					)
+				);
+			}
+		);
 
-	return;
+		return;
+	}
+
+	// Evita volver a declarar las clases del plugin si ya las cargó otro
+	// autoloader en el mismo proceso PHP (p. ej. el arnés compartido de
+	// pruebas de integración en tools/wp-tests/phpunit9, que mapea estos
+	// mismos namespaces directamente a src/ por ruta para no cargar el
+	// PHPUnit de este vendor/ dentro del proceso de un PHPUnit distinto).
+	require_once $autoloader;
 }
-
-require_once $autoloader;
 
 register_activation_hook(
 	__FILE__,

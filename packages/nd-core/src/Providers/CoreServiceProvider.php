@@ -10,6 +10,7 @@ use NDCore\Database\DatabaseManager;
 use NDCore\Filesystem\Filesystem;
 use NDCore\Hooks\HookManager;
 use NDCore\Http\Client;
+use NDCore\Installer\Installer;
 use NDCore\Migrator\Migrations\CreateJobsTable;
 use NDCore\Migrator\Migrator;
 use NDCore\Permissions\PermissionManager;
@@ -104,6 +105,34 @@ final class CoreServiceProvider extends ServiceProvider {
 			$updateChecker = $this->container->make( UpdateChecker::class );
 			$updateChecker->register( $hooks );
 		}
+
+		if ( defined( 'NDCORE_VERSION' ) ) {
+			$hooks->addAction( 'init', $this->maybeRunUpgrade( ... ), 1 );
+		}
+	}
+
+	/**
+	 * `Activator::activate()` solo se ejecuta en la activación explícita del
+	 * plugin: si un sitio se actualiza reemplazando los archivos en el
+	 * lugar (git pull, composer install) sin desactivar/reactivar, las
+	 * migraciones nuevas de paquetes empaquetados actualizados nunca
+	 * llegarían a correr. `Installer::install()` es idempotente (Migrator
+	 * omite las migraciones ya aplicadas), así que es seguro volver a
+	 * llamarla aquí cada vez que la versión instalada no coincide con la
+	 * versión actual del plugin — el mismo patrón de "rutina de
+	 * actualización" que usan WooCommerce, Yoast SEO, etc.
+	 */
+	public function maybeRunUpgrade(): void {
+		/** @var SettingsRepository $settings */
+		$settings = $this->container->make( SettingsRepository::class );
+
+		if ( $settings->get( 'installed_version' ) === NDCORE_VERSION ) {
+			return;
+		}
+
+		/** @var Installer $installer */
+		$installer = $this->container->make( Installer::class );
+		$installer->install();
 	}
 
 	public function migrations(): array {

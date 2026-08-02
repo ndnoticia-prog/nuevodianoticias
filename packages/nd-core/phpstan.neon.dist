@@ -4,6 +4,8 @@ parameters:
         - src
     excludePaths:
         - src/Support/helpers.php
+    bootstrapFiles:
+        - phpstan-bootstrap.php
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: true
     checkGenericClassInNonGenericObjectType: true

@@ -1,0 +1,40 @@
+{
+    "name": "ndnoticia/nd-platform-wp-tests-phpunit9",
+    "description": "Entorno aislado de PHPUnit 9 compartido por las suites de integración de todos los paquetes: el arnés de pruebas de wordpress-develop (WP_UnitTestCase::expectDeprecated()) todavía llama a PHPUnit\\Util\\Test::parseTestMethodAnnotations(), eliminado en PHPUnit 11. También actúa como único autoloader del proceso (mapeando los namespaces de cada paquete directamente a su src/ por ruta) para evitar que el propio vendor/autoload.php de cada paquete (con PHPUnit 11 en su classmap de require-dev) choque con este PHPUnit 9 en el mismo proceso. Ver tools/wp-tests/README.md.",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "private": true,
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    },
+    "require": {
+        "psr/container": "^2.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "NDCore\\": "../../../packages/nd-core/src/",
+            "NDBuilder\\": "../../../packages/nd-builder/src/",
+            "NDSeo\\": "../../../packages/nd-seo/src/",
+            "NDMedia\\": "../../../packages/nd-media/src/",
+            "NDDiscover\\": "../../../packages/nd-discover/src/",
+            "NDWorkflow\\": "../../../packages/nd-workflow/src/",
+            "NDAds\\": "../../../packages/nd-ads/src/",
+            "NDAnalytics\\": "../../../packages/nd-analytics/src/",
+            "NDCache\\": "../../../packages/nd-cache/src/",
+            "NDSearch\\": "../../../packages/nd-search/src/",
+            "NDAi\\": "../../../packages/nd-ai/src/"
+        },
+        "files": [
+            "../../../packages/nd-core/src/Support/helpers.php"
+        ]
+    }
+}

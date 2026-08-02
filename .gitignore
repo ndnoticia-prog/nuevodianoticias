@@ -3,6 +3,7 @@
 /node_modules/
 packages/*/vendor/
 packages/*/node_modules/
+tools/wp-tests/phpunit9/vendor/
 
 # Build output
 packages/*/dist/
@@ -44,6 +45,5 @@ phpstan.cache/
 /package-lock.json
 npm-debug.log*
 
-# WordPress test scaffolding
-/tests/wordpress/
-/tests/wp-tests-lib/
+# WordPress test scaffolding (checkout compartido, ~180MB — ver tools/wp-tests/README.md)
+/tools/wp-tests/wordpress-develop/

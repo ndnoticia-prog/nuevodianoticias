@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-ads",
-                "reference": "923981bca26dc302db8699e57d6456dac80494ef"
+                "reference": "6c67034d4a4679f81d8f49e8e09283fc0b0731d9"
             },
             "require": {
                 "php": ">=8.3"
@@ -92,7 +92,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-ai",
-                "reference": "46526a55113d1f67fe96c0e52aff4d45ea137942"
+                "reference": "53d59aaa9eb3eaff9fb2eff811e1090a422481bc"
             },
             "require": {
                 "php": ">=8.3"
@@ -172,7 +172,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-analytics",
-                "reference": "56d680a350cb19f4905f7c65f056ffb8b1ae7f59"
+                "reference": "549292ac2adec39695a8151a7e3df07c7b55227b"
             },
             "require": {
                 "php": ">=8.3"
@@ -254,7 +254,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-builder",
-                "reference": "634ce5136b2fbea5cfe1e9da6c26a784668ab653"
+                "reference": "36002ce1af22e87b32bd4c69fab79fe771b17e9c"
             },
             "require": {
                 "php": ">=8.3"
@@ -334,7 +334,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-cache",
-                "reference": "859e72901725fc52786d22163498845001d0b1b2"
+                "reference": "5787f42a1cf88d9a41f548c4c145afc1ba7d6ffc"
             },
             "require": {
                 "php": ">=8.3"
@@ -414,7 +414,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-discover",
-                "reference": "560b8753bfbbab0f4b850b5c4420e7dca69e6f3f"
+                "reference": "afed1a2a02638502361920e4c15dc2460beb226a"
             },
             "require": {
                 "php": ">=8.3"
@@ -494,7 +494,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-media",
-                "reference": "aee88b0877f1424c71ecd334dc6bd1b10582283c"
+                "reference": "792c96dfb0e930d43e73d7694aa641382ad76862"
             },
             "require": {
                 "php": ">=8.3"
@@ -574,7 +574,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-search",
-                "reference": "10c0aecd333c0e8672e06ce8e71ac31362e1e004"
+                "reference": "5bc0af080bde1761e38ae72d55c09dbcada26982"
             },
             "require": {
                 "php": ">=8.3"
@@ -654,7 +654,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-seo",
-                "reference": "094dcd60ccdafa3e909564bcc8e01f6c17934bba"
+                "reference": "86b51fef5d0b5000bed276ea88469d8b946b7f45"
             },
             "require": {
                 "php": ">=8.3"
@@ -734,7 +734,7 @@
             "dist": {
                 "type": "path",
                 "url": "../nd-workflow",
-                "reference": "63164437d01de67110a2ea76b6fbb3af4da2f84c"
+                "reference": "4093ba3975d94365fe02b965c98775922274f06b"
             },
             "require": {
                 "php": ">=8.3"
