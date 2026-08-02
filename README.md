@@ -11,18 +11,17 @@ ND Platform es un monorepo de paquetes Composer/npm independientes que juntos co
 | [`nd-core`](packages/nd-core) | Núcleo de la plataforma: contenedor DI, aplicación, configuración, hooks, eventos, enrutamiento, REST API, base de datos, migraciones, caché, colas, scheduler, seguridad, permisos, activación/actualización. |
 | [`nd-theme`](packages/nd-theme) | Tema de presentación (sin lógica de negocio): layouts, bloques de front-end, modo oscuro, responsive. |
 | [`nd-builder`](packages/nd-builder) | Constructor visual propio de páginas y módulos editoriales. |
-| [`nd-api`](packages/nd-api) | Superficie REST/GraphQL pública y de integración. |
 | [`nd-seo`](packages/nd-seo) | SEO técnico automático: Schema.org, OpenGraph, sitemaps, Discover, Google News. |
 | [`nd-ads`](packages/nd-ads) | Motor de publicidad propio (AdSense, GAM, patrocinados, segmentación). |
 | [`nd-media`](packages/nd-media) | Optimización y entrega de multimedia (imagen, video, podcast). |
 | [`nd-workflow`](packages/nd-workflow) | Flujo editorial: estados, roles, asignaciones, calendario. |
 | [`nd-analytics`](packages/nd-analytics) | Analítica editorial propia (tiempo real, más leídas, CTR). |
 | [`nd-ai`](packages/nd-ai) | Proveedor de IA desacoplado (OpenAI, Claude, Gemini, DeepSeek, LLM local). |
-| [`nd-cache`](packages/nd-cache) | Capa de caché de objetos/página (Redis, transients). |
+| [`nd-cache`](packages/nd-cache) | Caché de página completa, sobre la caché de objetos de `nd-core`. |
 | [`nd-discover`](packages/nd-discover) | Optimización para Google Discover. |
-| [`nd-search`](packages/nd-search) | Motor de búsqueda interno. |
+| [`nd-search`](packages/nd-search) | Motor de búsqueda interno (índice FULLTEXT propio). |
 
-Los entregables instalables en WordPress son **`nd-core`** y **`nd-theme`**; el resto de paquetes son dependencias que `nd-core` orquesta.
+Los entregables instalables en WordPress son **`nd-core`** y **`nd-theme`**; el resto de paquetes son dependencias que `nd-core` orquesta (ver "Dependencias entre paquetes" en `docs/Architecture.md`). No existe un paquete `nd-api` separado: la superficie REST vive distribuida en cada paquete vía `NDCore\RestApi\Contracts\RegistersRoutes`, centralizada por `nd-core`.
 
 ## Requisitos
 

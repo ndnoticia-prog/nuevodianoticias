@@ -58,11 +58,18 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [ ] Pruebas de integración con WordPress real para todo lo que depende de `DatabaseManager`/`WP_Query`/`WP_Post` (`EditorialNoteRepository`, `CalendarRepository`, `CampaignRepository`, `StatsRecorder`/`StatsRepository`, `ClickRedirectController`, `PageviewRecorder`, `ImpressionRecorder`, `AnalyticsRepository`): mismo caso ya documentado para `DatabaseManager`/`Migrator` en alpha.1.
 - [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-workflow`, `nd-ads` y `nd-analytics` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
 
-## v0.1.0-alpha.5 — IA y búsqueda
+## v0.1.0-alpha.5 — IA, búsqueda y caché (cierra la lista completa de paquetes)
 
-- [ ] `nd-ai`: proveedor desacoplado (OpenAI, Claude, Gemini, DeepSeek, LLM local) y generación de titulares/SEO/resúmenes/redes sociales.
-- [ ] `nd-search`: motor de búsqueda interno.
-- [ ] `nd-cache`: capa de caché de objetos/página con soporte Redis.
+- [x] `nd-ai`: proveedor desacoplado — `AiProvider` con 5 implementaciones (OpenAI, Claude, Gemini, DeepSeek, LLM local) sobre `NDCore\Http\Client`; `AiManager` resuelve el proveedor activo; `ApiKeyStore` cifra las claves con `NDCore\Security\Encryption` (primer consumidor real de esa clase); `ContentAssistant` con las 12 tareas pedidas (titulares, SEO, meta description, etiquetas, categorías, resumen, extracto, Facebook/Instagram/X/LinkedIn, newsletter, guion de video); REST `/ai/posts/{id}/generate` protegido con `Capability::USE_ND_AI`.
+- [x] `nd-search`: motor de búsqueda interno con índice `FULLTEXT` **propio** (`nd_search_index`), no altera el esquema de `wp_posts`; sustituye el `LIKE` por defecto de WordPress en la consulta principal (`pre_get_posts` + `posts_search`) por resultados ordenados por relevancia real, sin tocar `get_search_query()`/`is_search()`.
+- [x] `nd-cache`: caché de **página completa** (HTML servido en `template_redirect`, sin ejecutar el resto de WordPress) con invalidación editorial en `save_post` (artículo, portada, categorías). Reutiliza deliberadamente `NDCore\Cache\CacheManager` como backend en vez de duplicar la caché de objetos que nd-core ya tiene desde alpha.1.
+- [x] `nd-core`: `nd-ai`, `nd-search` y `nd-cache` añadidos a `require` (empaquetados) y sus providers registrados automáticamente en `Application`.
+- [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query`/`$wpdb` reales — en nd-ai, al no depender de base de datos, la cobertura es más completa que en paquetes anteriores (`AiManager`, `ContentAssistant`, `OpenAiProvider`, `ApiKeyStore`, wiring completo del provider).
+- [ ] Sin interfaz visual (gestor de claves de IA, panel de resultados de búsqueda, purga manual de caché): esta versión entrega la capa de datos/lógica y REST donde aplica.
+- [ ] nd-search no tiene ninguna pieza comprobable sin WordPress real (todo pasa por `WP_Post`/`WP_Query`/`$wpdb`): necesita pruebas de integración completas.
+- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-ai`, `nd-search` y `nd-cache` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
+
+Con esta versión quedan implementados los 13 paquetes de la arquitectura original (`nd-core`, `nd-builder`, `nd-theme`, `nd-api` pendiente — ver nota abajo —, `nd-seo`, `nd-ads`, `nd-media`, `nd-workflow`, `nd-analytics`, `nd-ai`, `nd-cache`, `nd-discover`, `nd-search`). `nd-api` no se ha creado como paquete separado: su responsabilidad (superficie REST pública) vive distribuida en cada paquete a través de `NDCore\RestApi\Contracts\RegistersRoutes` y el filtro `nd_core/rest_controllers`, centralizados por `RestApiServiceProvider` de nd-core — crear un paquete `nd-api` vacío solo para "existir" habría sido un contenedor sin responsabilidad propia.
 
 ## v0.1.0-beta
 

@@ -33,13 +33,19 @@
 
 `nd-ads` no expone endpoints REST: el clic en un anuncio se registra y redirige vía la ruta reescrita `/nd-ads/click/{id}` (no JSON, ver `docs/Architecture.md`).
 
+## Endpoints — v0.1.0-alpha.5
+
+| Método | Ruta | Descripción | Permiso |
+|---|---|---|---|
+| `POST` | `/wp-json/nd/v1/ai/posts/{id}/generate` | Genera contenido asistido por IA para un artículo. `task` (obligatorio): `headline`, `seo_title`, `meta_description`, `tags`, `categories`, `summary`, `excerpt`, `social_facebook`, `social_instagram`, `social_x`, `social_linkedin`, `newsletter`, `video_script`. | `use_nd_ai` |
+
+`nd-search` no expone endpoints REST propios en esta versión: sustituye la búsqueda nativa de WordPress directamente en la consulta principal (`pre_get_posts`/`posts_search`), así que `search.php` de nd-theme ya usa resultados ordenados por relevancia sin ningún cambio en el tema. `nd-cache` tampoco expone endpoints: opera de forma transparente en `template_redirect`.
+
 ## Endpoints planificados (versiones posteriores)
 
 Estos endpoints se documentarán aquí en el momento en que se implementen (no antes), siguiendo la regla de "nunca documentar código que no existe":
 
 - `nd/v1/ads/campaigns/*` — CRUD de campañas publicitarias (nd-ads), para un futuro panel de administración.
-- `nd/v1/ai/*` — generación asistida de contenido (nd-ai).
-- `nd/v1/search/*` — búsqueda interna (nd-search).
 
 ## Extender la API desde un paquete
 

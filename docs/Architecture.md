@@ -137,3 +137,21 @@ El clic (`/nd-ads/click/{id}`) resuelve el destino de la campaña **en el servid
 - **Registro del lado del servidor**: `PageviewRecorder` se ejecuta en el hook `wp` (una vez resuelta la consulta principal) para cada artículo, sin necesidad de JavaScript ni depender de que el visitante no tenga bloqueadores activos. Excluye explícitamente a usuarios con `edit_posts` (personal editorial) para no contaminar las estadísticas con su propio tráfico.
 - **"Tiempo real" honesto**: no hay websockets ni un proceso en segundo plano — `AnalyticsRepository::activeNow()` consulta directamente los últimos N minutos de la tabla de pageviews en el momento de la petición. El dato mostrado es, en efecto, el más reciente posible; sencillamente no se empuja al cliente sin que lo pida.
 - **`DatabaseManager::wpTable()`** (nuevo en nd-core): distinto de `table()` (que siempre añade el infijo `nd_` para tablas propias), permite referenciar tablas *nativas* de WordPress (`wp_posts`, `wp_terms`, ...) para los `JOIN` que necesitan `topAuthors()`/`topCategories()`.
+
+## nd-cache: por qué no es lo mismo que `NDCore\Cache\CacheManager`
+
+`nd-core` ya tiene desde alpha.1 una capa de caché de **objetos** (`CacheManager`, con drivers transient/object-cache/redis) — nd-cache no la duplica. Lo que nd-cache añade es caché de **página completa**: HTML ya renderizado, servido directamente en `template_redirect` sin ejecutar el resto de WordPress, algo que `CacheManager` no hace (cachea valores PHP arbitrarios, no la respuesta HTTP completa). `NDCache\PageCache\PageCacheStore` reutiliza `CacheManager` como backend de almacenamiento en lugar de implementar el suyo propio.
+
+Reglas de exclusión deliberadamente conservadoras: nunca cachea peticiones de usuarios autenticados, `is_admin()`, AJAX/REST/cron, ni búsquedas (que además ya resuelve `nd-search` con su propia lógica de relevancia). `NDCache\Invalidation\CacheInvalidator` purga la página del artículo, la portada y sus categorías en `save_post`, para que la caché de página no sirva contenido editorial obsoleto tras publicar o editar.
+
+## nd-search: un índice propio en vez de alterar `wp_posts`
+
+Para ordenar resultados por relevancia real (en vez del `LIKE` por defecto de WordPress, sin ranking) hace falta un índice `FULLTEXT` de MySQL. La alternativa obvia —añadírselo a la propia tabla `wp_posts`— se descartó deliberadamente: alterar el esquema de una tabla *core* de WordPress es una operación de alto riesgo que además queda fuera del control de este paquete si algo sale mal.
+
+En su lugar, `NDSearch\Migrations\CreateSearchIndexTable` crea una tabla propia (`nd_search_index`) con su propio `FULLTEXT KEY`, mantenida por `SearchIndexer` (hooks `save_post`/`before_delete_post`). La búsqueda real se resuelve con dos hooks: `pre_get_posts` restringe la consulta principal a los IDs ya ordenados por relevancia (`post__in` + `orderby=post__in`), y `posts_search` neutraliza (devuelve cadena vacía) la cláusula `LIKE` que WordPress añadiría por encima — sin eso, el `LIKE` podría excluir resultados que el `FULLTEXT` sí considera relevantes (coincidencias por forma de palabra, no substring exacto). `get_search_query()`/`is_search()` siguen funcionando con normalidad porque `s` nunca se toca, solo se neutraliza el SQL que genera.
+
+## nd-ai: por fin un consumidor real de `NDCore\Security\Encryption`
+
+Desde alpha.1, `Architecture.md` documentaba que "credenciales de terceros ... se cifran en reposo con `NDCore\Security\Encryption`", pero ningún paquete lo usaba todavía. `NDAi\Settings\ApiKeyStore` es ese primer consumidor real: las claves de API de cada proveedor de IA se cifran con `sodium_crypto_secretbox` antes de guardarse en `wp_options` vía `SettingsRepository`, y se descifran solo en memoria al construir el `AiProvider` correspondiente — nunca quedan en texto plano en la base de datos.
+
+Los cinco proveedores (`OpenAiProvider`, `ClaudeProvider`, `GeminiProvider`, `DeepSeekProvider`, `LocalLlmProvider`) implementan la misma interfaz `NDAi\Contracts\AiProvider` sobre `NDCore\Http\Client`, así que `AiManager` puede intercambiarlos sin que `ContentAssistant` (donde vive el conocimiento de qué prompt pedir para cada tarea editorial) sepa cuál está activo.
