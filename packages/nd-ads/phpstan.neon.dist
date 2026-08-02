@@ -17,6 +17,7 @@ parameters:
                 - src/Http/ClickRedirectController.php
                 - src/Rendering/AdRenderer.php
                 - src/Repository/CampaignRepository.php
+                - src/RestApi/CampaignController.php
                 - src/Stats/StatsRepository.php
 
 # szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen

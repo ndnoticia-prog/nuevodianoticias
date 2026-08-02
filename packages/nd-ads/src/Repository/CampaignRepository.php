@@ -89,6 +89,56 @@ final class CampaignRepository {
 		return array_map( $this->hydrate( ... ), $rows );
 	}
 
+	/**
+	 * Todas las campañas (activas e inactivas), para el gestor de admin —
+	 * a diferencia de active(), que es la usada por CampaignSelector al
+	 * servir anuncios de verdad.
+	 *
+	 * @return list<Campaign>
+	 */
+	public function all(): array {
+		$table = $this->db->table( self::TABLE );
+		$rows  = $this->db->select( "SELECT * FROM {$table} ORDER BY priority DESC, id DESC" );
+
+		return array_map( $this->hydrate( ... ), $rows );
+	}
+
+	/**
+	 * @param list<string> $zones
+	 * @param list<string> $categorySlugs
+	 * @param array<string, mixed> $creative
+	 */
+	public function update(
+		int $id,
+		string $name,
+		string $advertiser,
+		CampaignType $type,
+		bool $active,
+		int $priority,
+		array $zones,
+		array $categorySlugs,
+		array $creative,
+		?string $startsAt,
+		?string $endsAt
+	): bool {
+		return (bool) $this->db->update(
+			$this->db->table( self::TABLE ),
+			array(
+				'name'           => $name,
+				'advertiser'     => $advertiser,
+				'type'           => $type->value,
+				'active'         => $active ? 1 : 0,
+				'priority'       => $priority,
+				'zones'          => (string) wp_json_encode( array_values( $zones ) ),
+				'category_slugs' => (string) wp_json_encode( array_values( $categorySlugs ) ),
+				'creative'       => (string) wp_json_encode( $creative ),
+				'starts_at'      => $startsAt,
+				'ends_at'        => $endsAt,
+			),
+			array( 'id' => $id )
+		);
+	}
+
 	public function setActive( int $id, bool $active ): bool {
 		return (bool) $this->db->update(
 			$this->db->table( self::TABLE ),

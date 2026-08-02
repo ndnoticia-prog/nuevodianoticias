@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace NDAds\Providers;
 
+use NDAds\Admin\CampaignsAdminPage;
 use NDAds\Http\ClickRedirectController;
 use NDAds\Migrations\CreateAdCampaignsTable;
 use NDAds\Migrations\CreateAdEventsTable;
 use NDAds\Rendering\AdRenderer;
 use NDAds\Rendering\AdZoneRenderer;
 use NDAds\Repository\CampaignRepository;
+use NDAds\RestApi\CampaignController;
 use NDAds\Selection\CampaignSelector;
 use NDAds\Shortcode\AdShortcode;
 use NDAds\Stats\StatsRecorder;
@@ -28,6 +30,8 @@ final class AdsServiceProvider extends ServiceProvider {
 		$this->container->singleton( AdZoneRenderer::class );
 		$this->container->singleton( ClickRedirectController::class );
 		$this->container->singleton( AdShortcode::class );
+		$this->container->singleton( CampaignController::class );
+		$this->container->singleton( CampaignsAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -49,6 +53,24 @@ final class AdsServiceProvider extends ServiceProvider {
 		$hooks->addAction( 'init', $click->registerRewriteRule( ... ) );
 		$hooks->addFilter( 'query_vars', $click->registerQueryVar( ... ) );
 		$hooks->addAction( 'template_redirect', $click->maybeRedirect( ... ) );
+
+		$hooks->addFilter(
+			'nd_core/rest_controllers',
+			static function ( array $controllers ): array {
+				$controllers[] = CampaignController::class;
+
+				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = CampaignsAdminPage::class;
+
+				return $pages;
+			}
+		);
 	}
 
 	public function migrations(): array {
