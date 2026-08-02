@@ -1,0 +1,49 @@
+# Dependencies
+/vendor/
+/node_modules/
+packages/*/vendor/
+packages/*/node_modules/
+
+# Build output
+packages/*/dist/
+packages/*/build/
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+
+# Packaged artifacts
+/dist/
+*.zip
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# PHP tooling
+.phpunit.result.cache
+.phpunit.cache/
+phpstan.cache/
+.php-cs-fixer.cache
+
+# Root tooling workspace lockfiles are not shipped; package lockfiles ARE committed
+# (each package ships its own vendor/ build for the installable zip).
+/composer.lock
+/package-lock.json
+npm-debug.log*
+
+# WordPress test scaffolding
+/tests/wordpress/
+/tests/wp-tests-lib/
