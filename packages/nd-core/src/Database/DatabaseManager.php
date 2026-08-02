@@ -29,6 +29,19 @@ final class DatabaseManager
         return $this->wpdb->prefix . 'nd_';
     }
 
+    /**
+     * Nombre completo de una tabla NATIVA de WordPress (p. ej. "posts" ->
+     * "wp_posts", "term_relationships" -> "wp_term_relationships"), para
+     * paquetes que necesitan cruzar sus propias tablas con las de core
+     * (analítica por autor/categoría, por ejemplo). Distinto de table(),
+     * que siempre añade el infijo "nd_" para las tablas propias de la
+     * plataforma.
+     */
+    public function wpTable(string $name): string
+    {
+        return $this->wpdb->prefix . $name;
+    }
+
     public function table(string $name): string
     {
         return $this->prefix() . ltrim($name, '_');

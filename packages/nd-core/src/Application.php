@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NDCore;
 
+use NDAds\Providers\AdsServiceProvider;
+use NDAnalytics\Providers\AnalyticsServiceProvider;
 use NDBuilder\Providers\BuilderServiceProvider;
 use NDCore\Config\Config;
 use NDCore\Container\Container;
@@ -16,6 +18,7 @@ use NDCore\Providers\ServiceProvider;
 use NDDiscover\Providers\DiscoverServiceProvider;
 use NDMedia\Providers\MediaServiceProvider;
 use NDSeo\Providers\SeoServiceProvider;
+use NDWorkflow\Providers\WorkflowServiceProvider;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -122,9 +125,10 @@ final class Application extends Container
             RestApiServiceProvider::class,
         ];
 
-        // nd-builder, nd-seo, nd-media y nd-discover vienen empaquetados dentro
-        // del vendor/ de nd-core (ver composer.json), por eso se registran aquí
-        // en lugar de requerir que cada tema/paquete lo haga.
+        // nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads y
+        // nd-analytics vienen empaquetados dentro del vendor/ de nd-core (ver
+        // composer.json), por eso se registran aquí en lugar de requerir que
+        // cada tema/paquete lo haga.
         if (class_exists(BuilderServiceProvider::class)) {
             $default[] = BuilderServiceProvider::class;
         }
@@ -139,6 +143,18 @@ final class Application extends Container
 
         if (class_exists(DiscoverServiceProvider::class)) {
             $default[] = DiscoverServiceProvider::class;
+        }
+
+        if (class_exists(WorkflowServiceProvider::class)) {
+            $default[] = WorkflowServiceProvider::class;
+        }
+
+        if (class_exists(AdsServiceProvider::class)) {
+            $default[] = AdsServiceProvider::class;
+        }
+
+        if (class_exists(AnalyticsServiceProvider::class)) {
+            $default[] = AnalyticsServiceProvider::class;
         }
 
         /** @var list<class-string<ServiceProvider>> $configured */
