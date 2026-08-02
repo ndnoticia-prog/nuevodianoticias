@@ -72,3 +72,17 @@ El autowiring resuelve type-hints de clases/interfaces recursivamente; parámetr
 
 - Cualquier consulta repetible pasa por `NDCore\Cache\CacheManager`, que resuelve el driver activo (`transient`, `object-cache`, `redis`) de forma transparente para el consumidor.
 - Trabajo pesado (llamadas a proveedores de IA, procesamiento de medios, envío de notificaciones) se despacha a `NDCore\Queue\QueueManager`, ejecutado de forma asíncrona vía WP-Cron, nunca de forma síncrona en el hilo de una petición HTTP.
+
+## Dependencias entre paquetes: "provisto en runtime" vs. "empaquetado"
+
+`nd-core` y `nd-theme` son los dos únicos paquetes que se instalan directamente en WordPress (como plugin y como tema respectivamente). El resto de paquetes (`nd-builder`, `nd-seo`, `nd-ads`, `nd-ai`, ...) no se instalan por separado: sus clases viajan **dentro del `vendor/` de `nd-core`**, declaradas en su `require` de Composer, y quedan disponibles globalmente en el proceso de PHP en cuanto el plugin `nd-core` carga su autoloader (esto ocurre antes de que WordPress cargue el tema).
+
+Por eso `nd-builder` y `nd-theme` declaran `ndnoticia/nd-core` (y, en el caso de `nd-theme`, también `ndnoticia/nd-builder`) únicamente en `require-dev`, resuelto mediante un repositorio `path` propio hacia el paquete hermano. Esto permite que localmente (`composer install` completo) las clases estén disponibles para IDEs, PHPStan y PHPUnit, pero que un `composer install --no-dev` —el que usa `tools/build/package.sh` para generar el zip instalable— **no** las vendorice. Si lo hiciera, un mismo namespace (p. ej. `NDCore\Providers\ServiceProvider`) quedaría declarado dos veces en el mismo proceso de PHP (una vez por el plugin `nd-core` activo, otra por la copia empaquetada dentro de `nd-theme`), lo que WordPress no tolera: produce un fatal error `Cannot declare class ..., already declared`.
+
+Regla práctica: si un paquete B es consumido en tiempo de ejecución por un paquete A que WordPress activa por separado (plugin/tema), y ambos podrían estar activos a la vez, B se declara en el `require` de **quien lo empaqueta** (aquí, siempre `nd-core`) y en el `require-dev` de cualquier otro paquete que solo lo necesite para desarrollo/análisis estático.
+
+`nd-core` registra automáticamente `NDBuilder\Providers\BuilderServiceProvider` en su lista de providers por defecto (protegido con `class_exists()`), y `nd-theme` se autoregistra a través del filtro público `nd_core/providers` desde `functions.php`, comprobando antes que `NDCore\Application` exista para degradar sin fatal error si el plugin no está activo.
+
+## Plantillas de tema: evitar duplicar la jerarquía de WordPress
+
+`nd-theme` no define `category.php`, `tag.php` ni `author.php` por separado. `archive.php` es el *fallback* que WordPress usa automáticamente para esos tres contextos (además de archivos por fecha y por tipo de contenido), y las funciones nativas `the_archive_title()` / `the_archive_description()` ya adaptan su salida a cada uno (incluyendo la biografía del autor). Crear tres archivos casi idénticos a `archive.php` solo duplicaría la misma cuadrícula sin aportar nada; `archive.php` añade la única pieza que sí es distinta por contexto (el avatar cuando `is_author()`).

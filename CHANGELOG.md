@@ -40,3 +40,37 @@ Paquete `nd-core` — núcleo mínimo viable de ND Platform:
 ### Pending verification
 
 - `composer install`, `composer run check` (PHPCS/WPCS + PHPStan nivel máximo + PHPUnit) aún no se han ejecutado en este entorno de desarrollo por falta de PHP/Composer instalados; el código se ha revisado manualmente pero no se considera "verde" hasta correr el toolchain real.
+
+## [0.1.0-alpha.2] - Unreleased
+
+### Added
+
+Paquete `nd-builder` (nuevo) — constructor visual propio, capa de lógica sin HTML:
+
+- `Block`: value object inmutable (tipo, id, atributos).
+- `BlockRegistry` y `Renderer`: registro de tipos de bloque y motor de renderizado server-side.
+- `TemplateBlockRenderer`: puente hacia el tema activo vía `locate_template()`, sin `extract()` (WPCS) — el bloque llega íntegro como `$block` al scope de la plantilla.
+- `BuilderServiceProvider`: registra los tipos `hero`, `noticias` y `breaking` apuntando a `template-parts/blocks/` del tema activo.
+
+Paquete `nd-theme` (nuevo) — presentación, sin lógica de negocio:
+
+- Bootstrap (`style.css`, `functions.php`) con comprobación de que el plugin `nd-core` esté activo antes de registrar nada.
+- `ThemeServiceProvider`: theme supports, menús (`primary`, `footer`) y encolado de los assets compilados por Vite — todo a través de `HookManager`, nunca con `add_action` directo.
+- `HomeContentProvider`: traduce `WP_Query` a instancias de `NDBuilder\Block` para componer la portada (breaking → hero → noticias).
+- Plantillas: `front-page.php`, `single.php`, `archive.php` (fallback genérico y adaptativo para categoría/etiqueta/autor/fecha), `search.php`, `home.php`, `index.php`, `header.php`/`footer.php`, `template-parts/blocks/{hero,noticias,breaking}.php`.
+- SCSS (Vite): variables con modo oscuro (`prefers-color-scheme` + `data-theme`, sin parpadeo gracias a un script inline en `<head>`), diseño responsive mobile-first.
+- JS (Vite, ES modules): toggle de modo oscuro persistido en `localStorage`.
+- Suite de pruebas PHPUnit (Brain Monkey) para `nd-builder` y para `ThemeServiceProvider`.
+
+### Changed
+
+- `nd-core`: `nd-builder` se añade a `require` (se empaqueta dentro del plugin) y `NDBuilder\Providers\BuilderServiceProvider` se registra automáticamente en la lista de providers por defecto de `Application` (protegido con `class_exists()`).
+
+### Fixed
+
+- Corregido: `nd-builder`/`nd-theme` declaraban `ndnoticia/nd-core` en `require` en un borrador inicial, lo que habría duplicado sus clases (y provocado un fatal error "class already declared") si el plugin y el tema estaban activos a la vez. Se movió a `require-dev` (resuelto por un repositorio `path` local, solo para desarrollo/análisis estático) — ver "Dependencias entre paquetes" en `docs/Architecture.md`.
+
+### Pending verification
+
+- `HomeContentProvider` depende de `WP_Query` real: no es cubrible de forma fiable con Brain Monkey; necesita pruebas de integración con WordPress real, igual que `DatabaseManager`/`Migrator` de `nd-core`.
+- `composer install && composer run check` en `nd-builder` y `nd-theme` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que `nd-core`.
