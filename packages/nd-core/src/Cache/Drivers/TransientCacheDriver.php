@@ -16,14 +16,27 @@ final class TransientCacheDriver implements CacheDriver {
 	private const PREFIX         = 'nd_';
 	private const MAX_KEY_LENGTH = 172;
 
+	/**
+	 * wp_options.option_value es NOT NULL: guardar `null` directamente con
+	 * set_transient() se guarda como '' en la base de datos, no como
+	 * `null`, así que se pierde la distinción entre "no cacheado" (false)
+	 * y "cacheado como null" al leerlo de vuelta. Este centinela evita esa
+	 * pérdida de información.
+	 */
+	private const NULL_SENTINEL = "\0nd_cache_null\0";
+
 	public function get( string $key, mixed $default = null ): mixed {
 		$value = get_transient( $this->key( $key ) );
 
-		return $value === false ? $default : $value;
+		if ( $value === false ) {
+			return $default;
+		}
+
+		return $value === self::NULL_SENTINEL ? null : $value;
 	}
 
 	public function put( string $key, mixed $value, int $ttlSeconds ): bool {
-		return set_transient( $this->key( $key ), $value, $ttlSeconds );
+		return set_transient( $this->key( $key ), $value === null ? self::NULL_SENTINEL : $value, $ttlSeconds );
 	}
 
 	public function forget( string $key ): bool {
