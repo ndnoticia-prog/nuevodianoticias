@@ -1,0 +1,11 @@
+parameters:
+    level: max
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
