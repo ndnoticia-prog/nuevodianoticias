@@ -1,0 +1,15 @@
+{
+  "name": "@nd-platform/nd-theme",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "description": "Assets (SCSS/JS) del tema de presentación de ND Platform.",
+  "license": "GPL-2.0-or-later",
+  "scripts": {
+    "dev": "vite build --watch --mode development",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "sass": "^1.81.0",
+    "vite": "^5.4.11"
+  }
+}

@@ -1,0 +1,57 @@
+:root {
+  --nd-color-bg: #ffffff;
+  --nd-color-surface: #f4f5f7;
+  --nd-color-text: #1a1a1a;
+  --nd-color-text-muted: #5c5f66;
+  --nd-color-border: #e1e3e8;
+  --nd-color-primary: #c8102e;
+  --nd-color-primary-contrast: #ffffff;
+  --nd-color-breaking-bg: #c8102e;
+  --nd-color-breaking-text: #ffffff;
+  --nd-color-link: #0b5ed7;
+
+  --nd-font-family-base:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --nd-font-family-heading: var(--nd-font-family-base);
+
+  --nd-space-1: 0.25rem;
+  --nd-space-2: 0.5rem;
+  --nd-space-3: 1rem;
+  --nd-space-4: 1.5rem;
+  --nd-space-5: 2.5rem;
+
+  --nd-radius: 6px;
+  --nd-max-width: 1200px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --nd-color-bg: #101114;
+    --nd-color-surface: #1a1c20;
+    --nd-color-text: #f2f2f3;
+    --nd-color-text-muted: #a6a9b0;
+    --nd-color-border: #2b2e34;
+    --nd-color-link: #6ea8fe;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --nd-color-bg: #101114;
+  --nd-color-surface: #1a1c20;
+  --nd-color-text: #f2f2f3;
+  --nd-color-text-muted: #a6a9b0;
+  --nd-color-border: #2b2e34;
+  --nd-color-link: #6ea8fe;
+
+  color-scheme: dark;
+}
+
+// Breakpoints (mobile-first).
+$nd-breakpoint-sm: 480px;
+$nd-breakpoint-md: 768px;
+$nd-breakpoint-lg: 1024px;
+$nd-breakpoint-xl: 1280px;

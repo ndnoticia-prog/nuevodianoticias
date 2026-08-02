@@ -1,0 +1,118 @@
+@use 'variables' as vars;
+
+// -- Artículo individual ------------------------------------------------
+
+.nd-article {
+  &__categories {
+    display: flex;
+    gap: var(--nd-space-2);
+    margin-bottom: var(--nd-space-2);
+  }
+
+  &__category {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--nd-color-primary);
+    text-decoration: none;
+    border: 1px solid var(--nd-color-primary);
+    border-radius: 999px;
+    padding: 0.125rem 0.625rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin: 0 0 var(--nd-space-2);
+  }
+
+  &__meta {
+    color: var(--nd-color-text-muted);
+    margin: 0 0 var(--nd-space-3);
+  }
+
+  &__thumbnail {
+    margin: 0 0 var(--nd-space-4);
+
+    img {
+      border-radius: var(--nd-radius);
+      width: 100%;
+    }
+  }
+
+  &__content {
+    font-size: 1.0625rem;
+    max-width: 70ch;
+
+    p {
+      margin: 0 0 var(--nd-space-3);
+    }
+  }
+}
+
+// -- Archivo / búsqueda / índice de entradas -----------------------------
+
+.nd-archive__header {
+  margin-bottom: var(--nd-space-4);
+}
+
+.nd-archive__title {
+  font-size: 1.75rem;
+  margin: 0 0 var(--nd-space-2);
+}
+
+.nd-archive__author {
+  margin-bottom: var(--nd-space-2);
+
+  img {
+    border-radius: 50%;
+  }
+}
+
+.nd-post-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--nd-space-4);
+  margin-bottom: var(--nd-space-4);
+}
+
+.nd-entry-summary {
+  &__media img {
+    border-radius: var(--nd-radius);
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  &__title {
+    font-size: 1.0625rem;
+    margin: var(--nd-space-2) 0 var(--nd-space-1);
+
+    a {
+      color: var(--nd-color-text);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--nd-color-primary);
+      }
+    }
+  }
+
+  &__meta {
+    font-size: 0.8125rem;
+    color: var(--nd-color-text-muted);
+    margin: 0 0 var(--nd-space-2);
+  }
+
+  &__excerpt {
+    font-size: 0.9375rem;
+    color: var(--nd-color-text-muted);
+  }
+}
+
+@media (min-width: vars.$nd-breakpoint-lg) {
+  .nd-block--hero {
+    grid-template-columns: 3fr 2fr;
+    align-items: center;
+  }
+}
