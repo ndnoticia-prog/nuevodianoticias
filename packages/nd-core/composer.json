@@ -1,0 +1,79 @@
+{
+    "name": "ndnoticia/nd-core",
+    "description": "Núcleo de ND Platform: contenedor DI, aplicación, configuración, hooks, eventos, enrutamiento, REST API, base de datos, migraciones, caché, colas, scheduler, seguridad, permisos y activación.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/ndnoticia-prog/nd-platform",
+    "authors": [
+        {
+            "name": "ND Platform Engineering",
+            "homepage": "https://github.com/ndnoticia-prog"
+        }
+    ],
+    "keywords": ["wordpress", "cms", "editorial", "nd-platform"],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "platform": {
+            "php": "8.3"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "psr/container": "^2.0",
+        "psr/log": "^3.0"
+    },
+    "suggest": {
+        "ext-redis": "Necesario para usar NDCore\\Cache\\Drivers\\RedisCacheDriver en producción.",
+        "ext-sodium": "Necesario para NDCore\\Security\\Encryption (cifrado de credenciales de terceros)."
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.4",
+        "mockery/mockery": "^1.6",
+        "brain/monkey": "^2.6",
+        "phpstan/phpstan": "^1.12",
+        "phpstan/phpstan-strict-rules": "^1.6",
+        "phpstan/extension-installer": "^1.4",
+        "szepeviktor/phpstan-wordpress": "^1.3",
+        "squizlabs/php_codesniffer": "^3.10",
+        "wp-coding-standards/wpcs": "^3.1",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpcompatibility/phpcompatibility-wp": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "NDCore\\": "src/"
+        },
+        "files": [
+            "src/Support/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NDCore\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "stan": "phpstan analyse --memory-limit=1G",
+        "lint": "phpcs",
+        "lint:fix": "phpcbf",
+        "check": [
+            "@lint",
+            "@stan",
+            "@test"
+        ]
+    },
+    "extra": {
+        "nd-platform": {
+            "package-type": "wordpress-plugin",
+            "main-file": "nd-core.php"
+        }
+    }
+}

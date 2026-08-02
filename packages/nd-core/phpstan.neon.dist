@@ -1,0 +1,17 @@
+parameters:
+    level: max
+    paths:
+        - src
+    excludePaths:
+        - src/Support/helpers.php
+    treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    ignoreErrors:
+        -
+            message: '#(?i)class redis not found#'
+            path: src/Cache/Drivers/RedisCacheDriver.php
+
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
