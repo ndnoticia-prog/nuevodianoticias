@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace NDCore;
 
 use NDAds\Providers\AdsServiceProvider;
+use NDAi\Providers\AiServiceProvider;
 use NDAnalytics\Providers\AnalyticsServiceProvider;
 use NDBuilder\Providers\BuilderServiceProvider;
+use NDCache\Providers\CacheServiceProvider;
 use NDCore\Config\Config;
 use NDCore\Container\Container;
 use NDCore\Events\EventDispatcher;
@@ -17,6 +19,7 @@ use NDCore\Providers\RoutingServiceProvider;
 use NDCore\Providers\ServiceProvider;
 use NDDiscover\Providers\DiscoverServiceProvider;
 use NDMedia\Providers\MediaServiceProvider;
+use NDSearch\Providers\SearchServiceProvider;
 use NDSeo\Providers\SeoServiceProvider;
 use NDWorkflow\Providers\WorkflowServiceProvider;
 use Psr\Container\ContainerInterface;
@@ -125,10 +128,10 @@ final class Application extends Container
             RestApiServiceProvider::class,
         ];
 
-        // nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads y
-        // nd-analytics vienen empaquetados dentro del vendor/ de nd-core (ver
-        // composer.json), por eso se registran aquí en lugar de requerir que
-        // cada tema/paquete lo haga.
+        // nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads,
+        // nd-analytics, nd-cache, nd-search y nd-ai vienen empaquetados dentro
+        // del vendor/ de nd-core (ver composer.json), por eso se registran aquí
+        // en lugar de requerir que cada tema/paquete lo haga.
         if (class_exists(BuilderServiceProvider::class)) {
             $default[] = BuilderServiceProvider::class;
         }
@@ -155,6 +158,18 @@ final class Application extends Container
 
         if (class_exists(AnalyticsServiceProvider::class)) {
             $default[] = AnalyticsServiceProvider::class;
+        }
+
+        if (class_exists(CacheServiceProvider::class)) {
+            $default[] = CacheServiceProvider::class;
+        }
+
+        if (class_exists(SearchServiceProvider::class)) {
+            $default[] = SearchServiceProvider::class;
+        }
+
+        if (class_exists(AiServiceProvider::class)) {
+            $default[] = AiServiceProvider::class;
         }
 
         /** @var list<class-string<ServiceProvider>> $configured */

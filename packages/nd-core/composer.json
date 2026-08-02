@@ -21,7 +21,10 @@
         { "type": "path", "url": "../nd-discover" },
         { "type": "path", "url": "../nd-workflow" },
         { "type": "path", "url": "../nd-ads" },
-        { "type": "path", "url": "../nd-analytics" }
+        { "type": "path", "url": "../nd-analytics" },
+        { "type": "path", "url": "../nd-cache" },
+        { "type": "path", "url": "../nd-search" },
+        { "type": "path", "url": "../nd-ai" }
     ],
     "config": {
         "optimize-autoloader": true,
@@ -44,7 +47,10 @@
         "ndnoticia/nd-discover": "*",
         "ndnoticia/nd-workflow": "*",
         "ndnoticia/nd-ads": "*",
-        "ndnoticia/nd-analytics": "*"
+        "ndnoticia/nd-analytics": "*",
+        "ndnoticia/nd-cache": "*",
+        "ndnoticia/nd-search": "*",
+        "ndnoticia/nd-ai": "*"
     },
     "suggest": {
         "ext-redis": "Necesario para usar NDCore\\Cache\\Drivers\\RedisCacheDriver en producción.",
