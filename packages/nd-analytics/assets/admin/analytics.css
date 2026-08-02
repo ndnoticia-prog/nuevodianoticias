@@ -1,0 +1,58 @@
+.nd-analytics-panel-wrap {
+	max-width: 1200px;
+}
+
+.nd-analytics-panel__toolbar {
+	margin: 16px 0;
+}
+
+.nd-analytics-panel__grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(320px, 1fr));
+	gap: 16px;
+}
+
+.nd-analytics-panel__card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	padding: 16px 20px;
+}
+
+.nd-analytics-panel__card h2 {
+	margin-top: 0;
+	font-size: 14px;
+	text-transform: uppercase;
+	color: #50575e;
+}
+
+.nd-analytics-panel__big-number {
+	font-size: 32px;
+	font-weight: 600;
+	margin: 0 0 12px;
+}
+
+.nd-analytics-panel__table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.nd-analytics-panel__table th,
+.nd-analytics-panel__table td {
+	padding: 6px 8px;
+	text-align: left;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.nd-analytics-panel__table th {
+	font-size: 11px;
+	text-transform: uppercase;
+	color: #646970;
+}
+
+.nd-analytics-panel__empty {
+	color: #646970;
+}
+
+.nd-analytics-panel__error {
+	color: #d63638;
+}

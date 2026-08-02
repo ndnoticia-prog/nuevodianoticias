@@ -8,6 +8,7 @@ use NDBuilder\Events\BlockRendered;
 use NDCore\Events\EventDispatcher;
 use NDCore\Hooks\HookManager;
 use NDCore\Providers\ServiceProvider;
+use NDAnalytics\Admin\AnalyticsPanelAdminPage;
 use NDAnalytics\Migrations\CreateImpressionsTable;
 use NDAnalytics\Migrations\CreatePageviewsTable;
 use NDAnalytics\Repository\AnalyticsRepository;
@@ -24,6 +25,7 @@ final class AnalyticsServiceProvider extends ServiceProvider {
 		$this->container->singleton( ImpressionRecorder::class );
 		$this->container->singleton( AnalyticsRepository::class );
 		$this->container->singleton( AnalyticsController::class );
+		$this->container->singleton( AnalyticsPanelAdminPage::class );
 	}
 
 	public function boot(): void {
@@ -57,6 +59,15 @@ final class AnalyticsServiceProvider extends ServiceProvider {
 				$controllers[] = AnalyticsController::class;
 
 				return $controllers;
+			}
+		);
+
+		$hooks->addFilter(
+			'nd_core/admin_pages',
+			static function ( array $pages ): array {
+				$pages[] = AnalyticsPanelAdminPage::class;
+
+				return $pages;
 			}
 		);
 	}
