@@ -83,6 +83,13 @@ Regla práctica: si un paquete B es consumido en tiempo de ejecución por un paq
 
 `nd-core` registra automáticamente `NDBuilder\Providers\BuilderServiceProvider` en su lista de providers por defecto (protegido con `class_exists()`), y `nd-theme` se autoregistra a través del filtro público `nd_core/providers` desde `functions.php`, comprobando antes que `NDCore\Application` exista para degradar sin fatal error si el plugin no está activo.
 
+## SEO: qué reimplementa nd-seo y qué reutiliza de WordPress core
+
+- **Sitemap general**: nd-seo **no** reimplementa un sitemap XML genérico. WordPress core expone `wp-sitemap.xml` (y sus sub-sitemaps) desde la 5.5, mantenido y con el protocolo de sitemaps.org correctamente implementado; reescribirlo sería duplicar código sin necesidad. `NDSeo\Robots\RobotsTxtBuilder` simplemente le añade la directiva `Sitemap:` a `robots.txt`.
+- **Sitemap de Google News**: este SÍ es nuevo (`NDSeo\Sitemap\NewsSitemapController`, sirviendo `/sitemap-news.xml`) porque WordPress core no lo provee: usa un espacio de nombres XML distinto (`news:`) y solo incluye artículos de las últimas horas (configurable en `config/seo.php`, por defecto 48h).
+- **JSON-LD**: `SchemaOutput` imprime un único `<script type="application/ld+json">` con un `@graph` (en vez de un `<script>` por tipo) y codifica con `JSON_HEX_TAG | JSON_HEX_AMP`: sin esos flags, un título de artículo que contuviera literalmente `</script>` cerraría el bloque e inyectaría HTML/JS arbitrario en la página — es una clase de vulnerabilidad real y conocida en plugins de SEO para WordPress.
+- **Rewrite rule del sitemap de noticias y activación**: como es una limitación conocida de WordPress (las reglas de rewrite añadidas dentro del propio hook de activación no llegan a tiempo para el `flush_rewrite_rules()` que corre en la misma petición, porque `init` ya se disparó antes de que se ejecute el hook de activación), si `/sitemap-news.xml` da 404 justo tras activar `nd-core`, basta con ir a Ajustes → Enlaces permanentes y pulsar "Guardar cambios" una vez.
+
 ## Plantillas de tema: evitar duplicar la jerarquía de WordPress
 
 `nd-theme` no define `category.php`, `tag.php` ni `author.php` por separado. `archive.php` es el *fallback* que WordPress usa automáticamente para esos tres contextos (además de archivos por fecha y por tipo de contenido), y las funciones nativas `the_archive_title()` / `the_archive_description()` ya adaptan su salida a cada uno (incluyendo la biografía del autor). Crear tres archivos casi idénticos a `archive.php` solo duplicaría la misma cuadrícula sin aportar nada; `archive.php` añade la única pieza que sí es distinta por contexto (el avatar cuando `is_author()`).

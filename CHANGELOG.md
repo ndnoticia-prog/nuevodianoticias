@@ -74,3 +74,28 @@ Paquete `nd-theme` (nuevo) — presentación, sin lógica de negocio:
 
 - `HomeContentProvider` depende de `WP_Query` real: no es cubrible de forma fiable con Brain Monkey; necesita pruebas de integración con WordPress real, igual que `DatabaseManager`/`Migrator` de `nd-core`.
 - `composer install && composer run check` en `nd-builder` y `nd-theme` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que `nd-core`.
+
+## [0.1.0-alpha.3] - Unreleased
+
+### Added
+
+Paquete `nd-seo` (nuevo) — SEO automático:
+
+- `SeoContext`/`SeoContextResolver`: resuelve una única vez, por petición, el título/descripción/URL canónica/imagen/tipo/`noindex` de la página actual (singular, home, archivo, búsqueda, 404), consumido por el resto del paquete para no repetir esa lógica.
+- Meta tags en `wp_head`: `robots` (con `max-image-preview:large`, requisito de elegibilidad para Google Discover), `<link rel="canonical">`, OpenGraph y Twitter Cards.
+- Schema.org: JSON-LD como un único `<script type="application/ld+json">` con `@graph` — `Organization`, `WebSite` (con `SearchAction` para el buscador interno), `NewsArticle` (en vez de `Article`, para elegibilidad en Google News/Discover) y `BreadcrumbList`. Codificado con `JSON_HEX_TAG | JSON_HEX_AMP` para evitar inyección de HTML si un título contuviera literalmente `</script>`.
+- Breadcrumbs: `BreadcrumbBuilder` (misma lógica para el HTML y el `BreadcrumbList` de Schema.org) y `BreadcrumbRenderer`, integradas en `nd-theme` (`single.php`, `archive.php`, `search.php`).
+- Sitemap de Google News (`/sitemap-news.xml`, artículos publicados en las últimas 48h configurable). El sitemap general **no** se reimplementa: se reutiliza `wp-sitemap.xml` de WordPress core.
+- `robots.txt`: directivas `Sitemap:` hacia el sitemap general de core y el de noticias.
+- Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query` reales.
+
+### Changed
+
+- `nd-core`: `nd-seo` se añade a `require` (se empaqueta dentro del plugin) y `NDSeo\Providers\SeoServiceProvider` se registra automáticamente en la lista de providers por defecto de `Application` (protegido con `class_exists()`), siguiendo el mismo patrón que `nd-builder`.
+- `nd-theme`: `single.php`, `archive.php` y `search.php` ahora imprimen la ruta de navegación (`NDSeo\Breadcrumbs\BreadcrumbRenderer`); `nd-seo` se añade a `require-dev` (repositorio `path` local) para desarrollo/análisis estático.
+
+### Pending verification
+
+- `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController` dependen de `WP_Post`/`WP_Query` reales: necesitan pruebas de integración con WordPress real, mismo caso que `HomeContentProvider` en alpha.2.
+- Si `/sitemap-news.xml` devuelve 404 justo tras activar `nd-core`, es la limitación conocida de WordPress con rewrite rules añadidas durante la propia activación (ver "SEO" en `docs/Architecture.md`) — se resuelve guardando los enlaces permanentes una vez desde el admin.
+- `composer install && composer run check` en `nd-seo` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.

@@ -32,9 +32,18 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 
 ## v0.1.0-alpha.3 — SEO y multimedia
 
-- [ ] `nd-seo`: Schema.org, OpenGraph, Twitter Cards, canonical, breadcrumbs, sitemap XML, robots.
+- [x] `nd-seo`: `SeoContext`/`SeoContextResolver` (única fuente de verdad por página: singular, home, archivo, búsqueda, 404).
+- [x] `nd-seo`: meta tags en `wp_head` — robots (con `max-image-preview:large` para elegibilidad en Discover), canonical, OpenGraph, Twitter Cards.
+- [x] `nd-seo`: Schema.org JSON-LD como un único `@graph` — `Organization`, `WebSite` (con `SearchAction`), `NewsArticle`, `BreadcrumbList`.
+- [x] `nd-seo`: breadcrumbs (`BreadcrumbBuilder`/`BreadcrumbRenderer`) integradas en `nd-theme` (`single.php`, `archive.php`, `search.php`).
+- [x] `nd-seo`: sitemap de Google News (`/sitemap-news.xml`, artículos de las últimas 48h) — el sitemap general se reutiliza deliberadamente de WordPress core (`wp-sitemap.xml`) en lugar de reimplementarlo.
+- [x] `nd-seo`: `robots.txt` con directivas `Sitemap:`.
+- [x] `nd-core`: `nd-seo` añadido a `require` (empaquetado) y `SeoServiceProvider` registrado automáticamente en `Application`.
+- [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query` reales (`RobotsMetaBuilder`, `TwitterCardBuilder`, `OrganizationSchema`, `WebSiteSchema`, `RobotsTxtBuilder`, `SchemaOutput`, `SeoServiceProvider`).
+- [ ] Pruebas de integración con WordPress real para `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController`: dependen de `WP_Post`/`WP_Query` reales (mismo caso que `HomeContentProvider` en alpha.2).
 - [ ] `nd-media`: optimización WebP/AVIF, responsive images, lazy load.
-- [ ] `nd-discover`: requisitos técnicos de Google Discover (imágenes destacadas grandes, AMP-free, Core Web Vitals).
+- [ ] `nd-discover`: requisitos técnicos adicionales de Google Discover (más allá de `max-image-preview:large`, ya cubierto por `nd-seo`): Core Web Vitals, imágenes destacadas ≥1200px.
+- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-seo` (pendiente del mismo entorno de desarrollo que alpha.1/alpha.2).
 
 ## v0.1.0-alpha.4 — Editorial y publicidad
 
