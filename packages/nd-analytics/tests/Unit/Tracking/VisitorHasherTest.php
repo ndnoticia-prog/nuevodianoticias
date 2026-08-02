@@ -8,30 +8,30 @@ use Brain\Monkey\Functions;
 use NDAnalytics\Tests\BrainMonkeyTestCase;
 use NDAnalytics\Tracking\VisitorHasher;
 
-final class VisitorHasherTest extends BrainMonkeyTestCase
-{
-    public function test_hash_delegates_to_wp_hash(): void
-    {
-        Functions\expect('wp_hash')->once()->andReturn('a-stable-hash');
+final class VisitorHasherTest extends BrainMonkeyTestCase {
 
-        self::assertSame('a-stable-hash', (new VisitorHasher())->hash('203.0.113.5', 'Mozilla/5.0'));
-    }
+	public function test_hash_delegates_to_wp_hash(): void {
+		Functions\expect( 'wp_hash' )->once()->andReturn( 'a-stable-hash' );
 
-    public function test_hash_input_combines_ip_user_agent_and_todays_date_but_never_the_raw_ip_alone(): void
-    {
-        $capturedInput = null;
+		self::assertSame( 'a-stable-hash', ( new VisitorHasher() )->hash( '203.0.113.5', 'Mozilla/5.0' ) );
+	}
 
-        Functions\expect('wp_hash')->once()->andReturnUsing(static function (string $input) use (&$capturedInput): string {
-            $capturedInput = $input;
+	public function test_hash_input_combines_ip_user_agent_and_todays_date_but_never_the_raw_ip_alone(): void {
+		$capturedInput = null;
 
-            return 'hashed';
-        });
+		Functions\expect( 'wp_hash' )->once()->andReturnUsing(
+			static function ( string $input ) use ( &$capturedInput ): string {
+				$capturedInput = $input;
 
-        (new VisitorHasher())->hash('203.0.113.5', 'Mozilla/5.0');
+				return 'hashed';
+			}
+		);
 
-        self::assertMatchesRegularExpression(
-            '/^203\.0\.113\.5\|Mozilla\/5\.0\|\d{4}-\d{2}-\d{2}$/',
-            (string) $capturedInput
-        );
-    }
+		( new VisitorHasher() )->hash( '203.0.113.5', 'Mozilla/5.0' );
+
+		self::assertMatchesRegularExpression(
+			'/^203\.0\.113\.5\|Mozilla\/5\.0\|\d{4}-\d{2}-\d{2}$/',
+			(string) $capturedInput
+		);
+	}
 }

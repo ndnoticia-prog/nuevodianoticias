@@ -10,100 +10,111 @@ use NDCore\Events\EventDispatcher;
 use NDCore\Events\Listener;
 use PHPUnit\Framework\TestCase;
 
-final class EventDispatcherTestEvent extends Event
-{
-    public function __construct(public readonly string $articleTitle)
-    {
-    }
+final class EventDispatcherTestEvent extends Event {
+
+	public function __construct( public readonly string $articleTitle ) {
+	}
 }
 
-final class EventDispatcherTestListener implements Listener
-{
-    public static bool $wasCalled = false;
+final class EventDispatcherTestListener implements Listener {
 
-    public function handle(Event $event): void
-    {
-        self::$wasCalled = true;
-    }
+	public static bool $wasCalled = false;
+
+	public function handle( Event $event ): void {
+		self::$wasCalled = true;
+	}
 }
 
-final class EventDispatcherTest extends TestCase
-{
-    protected function setUp(): void
-    {
-        parent::setUp();
+final class EventDispatcherTest extends TestCase {
 
-        EventDispatcherTestListener::$wasCalled = false;
-    }
+	protected function setUp(): void {
+		parent::setUp();
 
-    public function test_closure_listener_receives_event(): void
-    {
-        $dispatcher = new EventDispatcher(new Container());
-        $received = null;
+		EventDispatcherTestListener::$wasCalled = false;
+	}
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, function (EventDispatcherTestEvent $event) use (&$received): void {
-            $received = $event->articleTitle;
-        });
+	public function test_closure_listener_receives_event(): void {
+		$dispatcher = new EventDispatcher( new Container() );
+		$received   = null;
 
-        $dispatcher->dispatch(new EventDispatcherTestEvent('Titular de prueba'));
+		$dispatcher->listen(
+			EventDispatcherTestEvent::class,
+			function ( EventDispatcherTestEvent $event ) use ( &$received ): void {
+				$received = $event->articleTitle;
+			}
+		);
 
-        self::assertSame('Titular de prueba', $received);
-    }
+		$dispatcher->dispatch( new EventDispatcherTestEvent( 'Titular de prueba' ) );
 
-    public function test_class_string_listener_is_resolved_through_container(): void
-    {
-        $dispatcher = new EventDispatcher(new Container());
-        $dispatcher->listen(EventDispatcherTestEvent::class, EventDispatcherTestListener::class);
+		self::assertSame( 'Titular de prueba', $received );
+	}
 
-        $dispatcher->dispatch(new EventDispatcherTestEvent('Titular de prueba'));
+	public function test_class_string_listener_is_resolved_through_container(): void {
+		$dispatcher = new EventDispatcher( new Container() );
+		$dispatcher->listen( EventDispatcherTestEvent::class, EventDispatcherTestListener::class );
 
-        self::assertTrue(EventDispatcherTestListener::$wasCalled);
-    }
+		$dispatcher->dispatch( new EventDispatcherTestEvent( 'Titular de prueba' ) );
 
-    public function test_listeners_run_in_priority_order(): void
-    {
-        $dispatcher = new EventDispatcher(new Container());
-        $order = [];
+		self::assertTrue( EventDispatcherTestListener::$wasCalled );
+	}
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, static function () use (&$order): void {
-            $order[] = 'second';
-        }, 20);
+	public function test_listeners_run_in_priority_order(): void {
+		$dispatcher = new EventDispatcher( new Container() );
+		$order      = array();
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, static function () use (&$order): void {
-            $order[] = 'first';
-        }, 10);
+		$dispatcher->listen(
+			EventDispatcherTestEvent::class,
+			static function () use ( &$order ): void {
+				$order[] = 'second';
+			},
+			20
+		);
 
-        $dispatcher->dispatch(new EventDispatcherTestEvent('x'));
+		$dispatcher->listen(
+			EventDispatcherTestEvent::class,
+			static function () use ( &$order ): void {
+				$order[] = 'first';
+			},
+			10
+		);
 
-        self::assertSame(['first', 'second'], $order);
-    }
+		$dispatcher->dispatch( new EventDispatcherTestEvent( 'x' ) );
 
-    public function test_stopped_propagation_prevents_further_listeners(): void
-    {
-        $dispatcher = new EventDispatcher(new Container());
-        $secondCalled = false;
+		self::assertSame( array( 'first', 'second' ), $order );
+	}
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, static function (EventDispatcherTestEvent $event): void {
-            $event->stopPropagation();
-        }, 10);
+	public function test_stopped_propagation_prevents_further_listeners(): void {
+		$dispatcher   = new EventDispatcher( new Container() );
+		$secondCalled = false;
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, static function () use (&$secondCalled): void {
-            $secondCalled = true;
-        }, 20);
+		$dispatcher->listen(
+			EventDispatcherTestEvent::class,
+			static function ( EventDispatcherTestEvent $event ): void {
+				$event->stopPropagation();
+			},
+			10
+		);
 
-        $dispatcher->dispatch(new EventDispatcherTestEvent('x'));
+		$dispatcher->listen(
+			EventDispatcherTestEvent::class,
+			static function () use ( &$secondCalled ): void {
+				$secondCalled = true;
+			},
+			20
+		);
 
-        self::assertFalse($secondCalled);
-    }
+		$dispatcher->dispatch( new EventDispatcherTestEvent( 'x' ) );
 
-    public function test_has_listeners(): void
-    {
-        $dispatcher = new EventDispatcher(new Container());
+		self::assertFalse( $secondCalled );
+	}
 
-        self::assertFalse($dispatcher->hasListeners(EventDispatcherTestEvent::class));
+	public function test_has_listeners(): void {
+		$dispatcher = new EventDispatcher( new Container() );
 
-        $dispatcher->listen(EventDispatcherTestEvent::class, static fn (): null => null);
+		self::assertFalse( $dispatcher->hasListeners( EventDispatcherTestEvent::class ) );
 
-        self::assertTrue($dispatcher->hasListeners(EventDispatcherTestEvent::class));
-    }
+		$dispatcher->listen( EventDispatcherTestEvent::class, static fn (): null => null );
+
+		self::assertTrue( $dispatcher->hasListeners( EventDispatcherTestEvent::class ) );
+	}
 }

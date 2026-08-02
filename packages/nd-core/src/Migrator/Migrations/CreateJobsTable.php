@@ -7,14 +7,13 @@ namespace NDCore\Migrator\Migrations;
 use NDCore\Database\DatabaseManager;
 use NDCore\Migrator\Migration;
 
-final class CreateJobsTable extends Migration
-{
-    public function up(DatabaseManager $db): void
-    {
-        $table = $db->table('jobs');
-        $charsetCollate = $db->charsetCollate();
+final class CreateJobsTable extends Migration {
 
-        $sql = "CREATE TABLE {$table} (
+	public function up( DatabaseManager $db ): void {
+		$table          = $db->table( 'jobs' );
+		$charsetCollate = $db->charsetCollate();
+
+		$sql = "CREATE TABLE {$table} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             job_class VARCHAR(191) NOT NULL,
             payload LONGTEXT NOT NULL,
@@ -29,16 +28,15 @@ final class CreateJobsTable extends Migration
             KEY reserved_at (reserved_at)
         ) {$charsetCollate};";
 
-        if (! function_exists('dbDelta')) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        }
+		if ( ! function_exists( 'dbDelta' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		}
 
-        dbDelta($sql);
-    }
+		dbDelta( $sql );
+	}
 
-    public function down(DatabaseManager $db): void
-    {
-        $table = $db->table('jobs');
-        $db->statement("DROP TABLE IF EXISTS {$table}");
-    }
+	public function down( DatabaseManager $db ): void {
+		$table = $db->table( 'jobs' );
+		$db->statement( "DROP TABLE IF EXISTS {$table}" );
+	}
 }

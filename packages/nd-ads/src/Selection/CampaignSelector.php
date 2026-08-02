@@ -13,35 +13,33 @@ use NDAds\Repository\CampaignRepository;
  * de mayor prioridad que además esté programada para el momento actual y
  * coincida con la segmentación configurada.
  */
-final class CampaignSelector
-{
-    public function __construct(private readonly CampaignRepository $campaigns)
-    {
-    }
+final class CampaignSelector {
 
-    /**
-     * @param list<string> $categorySlugs Categorías del contenido donde se va a mostrar el anuncio.
-     */
-    public function selectForZone(string $zone, array $categorySlugs = []): ?Campaign
-    {
-        $now = new DateTimeImmutable('now', wp_timezone());
+	public function __construct( private readonly CampaignRepository $campaigns ) {
+	}
 
-        foreach ($this->campaigns->active() as $campaign) {
-            if (! $campaign->matchesZone($zone)) {
-                continue;
-            }
+	/**
+	 * @param list<string> $categorySlugs Categorías del contenido donde se va a mostrar el anuncio.
+	 */
+	public function selectForZone( string $zone, array $categorySlugs = array() ): ?Campaign {
+		$now = new DateTimeImmutable( 'now', wp_timezone() );
 
-            if (! $campaign->isScheduledAt($now)) {
-                continue;
-            }
+		foreach ( $this->campaigns->active() as $campaign ) {
+			if ( ! $campaign->matchesZone( $zone ) ) {
+				continue;
+			}
 
-            if (! $campaign->matchesCategories($categorySlugs)) {
-                continue;
-            }
+			if ( ! $campaign->isScheduledAt( $now ) ) {
+				continue;
+			}
 
-            return $campaign;
-        }
+			if ( ! $campaign->matchesCategories( $categorySlugs ) ) {
+				continue;
+			}
 
-        return null;
-    }
+			return $campaign;
+		}
+
+		return null;
+	}
 }

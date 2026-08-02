@@ -9,19 +9,18 @@ namespace NDSeo\Robots;
  * WordPress core), apuntando tanto al sitemap general de core
  * (`wp-sitemap.xml`) como al de Google News de nd-seo.
  */
-final class RobotsTxtBuilder
-{
-    public function filter(string $output, bool $public): string
-    {
-        if (! $public) {
-            return $output;
-        }
+final class RobotsTxtBuilder {
 
-        $lines = [
-            'Sitemap: ' . home_url('/wp-sitemap.xml'),
-            'Sitemap: ' . home_url('/sitemap-news.xml'),
-        ];
+	public function filter( string $output, bool $public ): string {
+		if ( ! $public ) {
+			return $output;
+		}
 
-        return rtrim($output) . "\n\n" . implode("\n", $lines) . "\n";
-    }
+		$lines = array(
+			'Sitemap: ' . home_url( '/wp-sitemap.xml' ),
+			'Sitemap: ' . home_url( '/sitemap-news.xml' ),
+		);
+
+		return rtrim( $output ) . "\n\n" . implode( "\n", $lines ) . "\n";
+	}
 }

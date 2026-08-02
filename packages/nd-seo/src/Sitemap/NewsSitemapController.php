@@ -14,90 +14,88 @@ use WP_Query;
  * (`wp-sitemap.xml`) desde la 5.5, así que nd-seo deliberadamente NO lo
  * reimplementa — solo añade lo que core no cubre. Ver docs/Architecture.md.
  */
-final class NewsSitemapController
-{
-    public const QUERY_VAR = 'nd_news_sitemap';
+final class NewsSitemapController {
 
-    public function __construct(private readonly Config $config)
-    {
-    }
+	public const QUERY_VAR = 'nd_news_sitemap';
 
-    public function registerRewriteRule(): void
-    {
-        add_rewrite_rule('^sitemap-news\.xml$', 'index.php?' . self::QUERY_VAR . '=1', 'top');
-    }
+	public function __construct( private readonly Config $config ) {
+	}
 
-    /**
-     * @param list<string> $vars
-     *
-     * @return list<string>
-     */
-    public function registerQueryVar(array $vars): array
-    {
-        $vars[] = self::QUERY_VAR;
+	public function registerRewriteRule(): void {
+		add_rewrite_rule( '^sitemap-news\.xml$', 'index.php?' . self::QUERY_VAR . '=1', 'top' );
+	}
 
-        return $vars;
-    }
+	/**
+	 * @param list<string> $vars
+	 *
+	 * @return list<string>
+	 */
+	public function registerQueryVar( array $vars ): array {
+		$vars[] = self::QUERY_VAR;
 
-    public function maybeRender(): void
-    {
-        if (! get_query_var(self::QUERY_VAR)) {
-            return;
-        }
+		return $vars;
+	}
 
-        if (! (bool) $this->config->get('seo.news_sitemap.enabled', true)) {
-            status_header(404);
-            exit;
-        }
+	public function maybeRender(): void {
+		if ( ! (bool) get_query_var( self::QUERY_VAR ) ) {
+			return;
+		}
 
-        header('Content-Type: application/xml; charset=' . get_bloginfo('charset'));
-        echo $this->buildXml();
-        exit;
-    }
+		if ( ! (bool) $this->config->get( 'seo.news_sitemap.enabled', true ) ) {
+			status_header( 404 );
+			exit;
+		}
 
-    private function buildXml(): string
-    {
-        $maxAgeHours = (int) $this->config->get('seo.news_sitemap.max_age_hours', 48);
-        $maxItems = (int) $this->config->get('seo.news_sitemap.max_items', 1000);
-        $publicationName = $this->config->get('seo.news_sitemap.publication_name');
-        $publicationName = is_string($publicationName) && $publicationName !== ''
-            ? $publicationName
-            : (string) get_bloginfo('name');
-        $language = (string) $this->config->get('seo.news_sitemap.publication_language', 'es');
+		header( 'Content-Type: application/xml; charset=' . get_bloginfo( 'charset' ) );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- buildXml() ya escapa cada valor dinámico (esc_url()/esc_html()) antes de ensamblar el XML; la sniff no ve a través del límite del método.
+		echo $this->buildXml();
+		exit;
+	}
 
-        $query = new WP_Query([
-            'post_type' => 'post',
-            'post_status' => 'publish',
-            'posts_per_page' => $maxItems,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'no_found_rows' => true,
-            'ignore_sticky_posts' => true,
-            'date_query' => [
-                ['after' => $maxAgeHours . ' hours ago'],
-            ],
-        ]);
+	private function buildXml(): string {
+		$maxAgeHours     = (int) $this->config->get( 'seo.news_sitemap.max_age_hours', 48 );
+		$maxItems        = (int) $this->config->get( 'seo.news_sitemap.max_items', 1000 );
+		$publicationName = $this->config->get( 'seo.news_sitemap.publication_name' );
+		$publicationName = is_string( $publicationName ) && $publicationName !== ''
+			? $publicationName
+			: (string) get_bloginfo( 'name' );
+		$language        = (string) $this->config->get( 'seo.news_sitemap.publication_language', 'es' );
 
-        $items = '';
+		$query = new WP_Query(
+			array(
+				'post_type'           => 'post',
+				'post_status'         => 'publish',
+				'posts_per_page'      => $maxItems,
+				'orderby'             => 'date',
+				'order'               => 'DESC',
+				'no_found_rows'       => true,
+				'ignore_sticky_posts' => true,
+				'date_query'          => array(
+					array( 'after' => $maxAgeHours . ' hours ago' ),
+				),
+			)
+		);
 
-        foreach ($query->posts as $post) {
-            $items .= sprintf(
-                '<url><loc>%s</loc><news:news><news:publication><news:name>%s</news:name>' .
-                '<news:language>%s</news:language></news:publication>' .
-                '<news:publication_date>%s</news:publication_date><news:title>%s</news:title>' .
-                '</news:news></url>',
-                esc_url((string) get_permalink($post)),
-                esc_html($publicationName),
-                esc_html($language),
-                esc_html(get_the_date(DATE_W3C, $post)),
-                esc_html(wp_strip_all_tags(get_the_title($post)))
-            );
-        }
+		$items = '';
 
-        return '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' .
-            'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' .
-            $items .
-            '</urlset>';
-    }
+		foreach ( $query->posts as $post ) {
+			$items .= sprintf(
+				'<url><loc>%s</loc><news:news><news:publication><news:name>%s</news:name>' .
+				'<news:language>%s</news:language></news:publication>' .
+				'<news:publication_date>%s</news:publication_date><news:title>%s</news:title>' .
+				'</news:news></url>',
+				esc_url( (string) get_permalink( $post ) ),
+				esc_html( $publicationName ),
+				esc_html( $language ),
+				esc_html( (string) get_the_date( DATE_W3C, $post ) ),
+				esc_html( wp_strip_all_tags( get_the_title( $post ) ) )
+			);
+		}
+
+		return '<?xml version="1.0" encoding="UTF-8"?>' .
+			'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' .
+			'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' .
+			$items .
+			'</urlset>';
+	}
 }

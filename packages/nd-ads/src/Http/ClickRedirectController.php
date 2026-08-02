@@ -13,57 +13,55 @@ use NDAds\Stats\StatsRecorder;
  * acepta una URL de destino por parámetro: así no existe riesgo de
  * open-redirect.
  */
-final class ClickRedirectController
-{
-    public const QUERY_VAR = 'nd_ad_click_campaign';
+final class ClickRedirectController {
 
-    public function __construct(
-        private readonly CampaignRepository $campaigns,
-        private readonly StatsRecorder $stats,
-    ) {
-    }
+	public const QUERY_VAR = 'nd_ad_click_campaign';
 
-    public function registerRewriteRule(): void
-    {
-        add_rewrite_rule('^nd-ads/click/([0-9]+)/?$', 'index.php?' . self::QUERY_VAR . '=$matches[1]', 'top');
-    }
+	public function __construct(
+		private readonly CampaignRepository $campaigns,
+		private readonly StatsRecorder $stats,
+	) {
+	}
 
-    /**
-     * @param list<string> $vars
-     *
-     * @return list<string>
-     */
-    public function registerQueryVar(array $vars): array
-    {
-        $vars[] = self::QUERY_VAR;
+	public function registerRewriteRule(): void {
+		add_rewrite_rule( '^nd-ads/click/([0-9]+)/?$', 'index.php?' . self::QUERY_VAR . '=$matches[1]', 'top' );
+	}
 
-        return $vars;
-    }
+	/**
+	 * @param list<string> $vars
+	 *
+	 * @return list<string>
+	 */
+	public function registerQueryVar( array $vars ): array {
+		$vars[] = self::QUERY_VAR;
 
-    public function maybeRedirect(): void
-    {
-        $campaignId = (int) get_query_var(self::QUERY_VAR);
+		return $vars;
+	}
 
-        if ($campaignId <= 0) {
-            return;
-        }
+	public function maybeRedirect(): void {
+		$campaignId = (int) get_query_var( self::QUERY_VAR );
 
-        $campaign = $this->campaigns->find($campaignId);
-        $destination = null;
+		if ( $campaignId <= 0 ) {
+			return;
+		}
 
-        if ($campaign !== null) {
-            $creativeLink = $campaign->creative['link_url'] ?? null;
-            $destination = is_string($creativeLink) && $creativeLink !== '' ? $creativeLink : null;
-        }
+		$campaign    = $this->campaigns->find( $campaignId );
+		$destination = null;
 
-        if ($destination === null) {
-            wp_safe_redirect((string) home_url('/'));
-            exit;
-        }
+		if ( $campaign !== null ) {
+			$creativeLink = $campaign->creative['link_url'] ?? null;
+			$destination  = is_string( $creativeLink ) && $creativeLink !== '' ? $creativeLink : null;
+		}
 
-        $this->stats->recordClick($campaignId);
+		if ( $destination === null ) {
+			wp_safe_redirect( (string) home_url( '/' ) );
+			exit;
+		}
 
-        wp_redirect(esc_url_raw($destination));
-        exit;
-    }
+		$this->stats->recordClick( $campaignId );
+
+		// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- $destination es la URL del anunciante, resuelta en servidor desde datos de campaña gestionados por un admin (no un parámetro de la petición); wp_safe_redirect() bloquearía destinos externos legítimos, que es justo el caso de uso.
+		wp_redirect( esc_url_raw( $destination ) );
+		exit;
+	}
 }

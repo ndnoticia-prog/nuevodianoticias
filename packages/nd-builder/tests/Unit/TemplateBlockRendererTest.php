@@ -10,52 +10,48 @@ use NDBuilder\Tests\BrainMonkeyTestCase;
 use NDBuilder\TemplateBlockRenderer;
 use RuntimeException;
 
-final class TemplateBlockRendererTest extends BrainMonkeyTestCase
-{
-    private string $templateFile;
+final class TemplateBlockRendererTest extends BrainMonkeyTestCase {
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+	private string $templateFile;
 
-        $this->templateFile = sys_get_temp_dir() . '/nd-builder-hero-' . bin2hex(random_bytes(4)) . '.php';
-        file_put_contents(
-            $this->templateFile,
-            "<?php echo '<h1>' . htmlspecialchars((string) \$block->attribute('title', '')) . '</h1>';"
-        );
-    }
+	protected function setUp(): void {
+		parent::setUp();
 
-    protected function tearDown(): void
-    {
-        if (file_exists($this->templateFile)) {
-            unlink($this->templateFile);
-        }
+		$this->templateFile = sys_get_temp_dir() . '/nd-builder-hero-' . bin2hex( random_bytes( 4 ) ) . '.php';
+		file_put_contents(
+			$this->templateFile,
+			"<?php echo '<h1>' . htmlspecialchars((string) \$block->attribute('title', '')) . '</h1>';"
+		);
+	}
 
-        parent::tearDown();
-    }
+	protected function tearDown(): void {
+		if ( file_exists( $this->templateFile ) ) {
+			unlink( $this->templateFile );
+		}
 
-    public function test_render_includes_the_located_template_with_block_in_scope(): void
-    {
-        $block = new Block('hero', 'hero-1', ['title' => 'Última hora']);
+		parent::tearDown();
+	}
 
-        Functions\expect('locate_template')
-            ->once()
-            ->with(['template-parts/blocks/hero.php'], false)
-            ->andReturn($this->templateFile);
+	public function test_render_includes_the_located_template_with_block_in_scope(): void {
+		$block = new Block( 'hero', 'hero-1', array( 'title' => 'Última hora' ) );
 
-        $renderer = new TemplateBlockRenderer(['template-parts/blocks/hero']);
+		Functions\expect( 'locate_template' )
+			->once()
+			->with( array( 'template-parts/blocks/hero.php' ), false )
+			->andReturn( $this->templateFile );
 
-        self::assertSame('<h1>Última hora</h1>', $renderer->render($block));
-    }
+		$renderer = new TemplateBlockRenderer( array( 'template-parts/blocks/hero' ) );
 
-    public function test_render_throws_when_no_template_is_located(): void
-    {
-        Functions\expect('locate_template')->once()->andReturn('');
+		self::assertSame( '<h1>Última hora</h1>', $renderer->render( $block ) );
+	}
 
-        $renderer = new TemplateBlockRenderer(['template-parts/blocks/missing']);
+	public function test_render_throws_when_no_template_is_located(): void {
+		Functions\expect( 'locate_template' )->once()->andReturn( '' );
 
-        $this->expectException(RuntimeException::class);
+		$renderer = new TemplateBlockRenderer( array( 'template-parts/blocks/missing' ) );
 
-        $renderer->render(new Block('missing', 'x-1'));
-    }
+		$this->expectException( RuntimeException::class );
+
+		$renderer->render( new Block( 'missing', 'x-1' ) );
+	}
 }

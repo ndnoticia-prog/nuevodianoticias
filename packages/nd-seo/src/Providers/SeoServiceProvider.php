@@ -23,66 +23,88 @@ use NDSeo\Schema\SchemaOutput;
 use NDSeo\Schema\WebSiteSchema;
 use NDSeo\Sitemap\NewsSitemapController;
 
-final class SeoServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        /** @var Config $config */
-        $config = $this->container->make(Config::class);
-        $config->loadDirectory(dirname(__DIR__, 2) . '/config');
+final class SeoServiceProvider extends ServiceProvider {
 
-        $this->container->singleton(SeoContextResolver::class);
-        $this->container->singleton(RobotsMetaBuilder::class);
-        $this->container->singleton(OpenGraphBuilder::class);
-        $this->container->singleton(TwitterCardBuilder::class);
-        $this->container->singleton(MetaTagRenderer::class);
+	public function register(): void {
+		/** @var Config $config */
+		$config = $this->container->make( Config::class );
+		$config->loadDirectory( dirname( __DIR__, 2 ) . '/config' );
 
-        $this->container->singleton(BreadcrumbBuilder::class);
-        $this->container->singleton(BreadcrumbRenderer::class);
+		$this->container->singleton( SeoContextResolver::class );
+		$this->container->singleton( RobotsMetaBuilder::class );
+		$this->container->singleton( OpenGraphBuilder::class );
+		$this->container->singleton( TwitterCardBuilder::class );
+		$this->container->singleton( MetaTagRenderer::class );
 
-        $this->container->singleton(OrganizationSchema::class);
-        $this->container->singleton(WebSiteSchema::class);
-        $this->container->singleton(NewsArticleSchema::class);
-        $this->container->singleton(BreadcrumbListSchema::class);
+		$this->container->singleton( BreadcrumbBuilder::class );
+		$this->container->singleton( BreadcrumbRenderer::class );
 
-        $this->container->singleton(SchemaOutput::class, function (): SchemaOutput {
-            /** @var list<SchemaProvider> $providers */
-            $providers = [
-                $this->container->make(OrganizationSchema::class),
-                $this->container->make(WebSiteSchema::class),
-                $this->container->make(NewsArticleSchema::class),
-                $this->container->make(BreadcrumbListSchema::class),
-            ];
+		$this->container->singleton( OrganizationSchema::class );
+		$this->container->singleton( WebSiteSchema::class );
+		$this->container->singleton( NewsArticleSchema::class );
+		$this->container->singleton( BreadcrumbListSchema::class );
 
-            return new SchemaOutput($this->container->make(SeoContextResolver::class), $providers);
-        });
+		$this->container->singleton(
+			SchemaOutput::class,
+			function (): SchemaOutput {
+				/** @var list<SchemaProvider> $providers */
+				$providers = array(
+					$this->container->make( OrganizationSchema::class ),
+					$this->container->make( WebSiteSchema::class ),
+					$this->container->make( NewsArticleSchema::class ),
+					$this->container->make( BreadcrumbListSchema::class ),
+				);
 
-        $this->container->singleton(RobotsTxtBuilder::class);
-        $this->container->singleton(NewsSitemapController::class);
-    }
+				/** @var SeoContextResolver $contextResolver */
+				$contextResolver = $this->container->make( SeoContextResolver::class );
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+				return new SchemaOutput( $contextResolver, $providers );
+			}
+		);
 
-        $hooks->addAction('wp_head', function (): void {
-            $this->container->make(MetaTagRenderer::class)->render();
-        });
+		$this->container->singleton( RobotsTxtBuilder::class );
+		$this->container->singleton( NewsSitemapController::class );
+	}
 
-        $hooks->addAction('wp_head', function (): void {
-            $this->container->make(SchemaOutput::class)->render();
-        });
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        $hooks->addFilter('robots_txt', function (string $output, bool $public): string {
-            return $this->container->make(RobotsTxtBuilder::class)->filter($output, $public);
-        }, 10, 2);
+		$hooks->addAction(
+			'wp_head',
+			function (): void {
+				/** @var MetaTagRenderer $renderer */
+				$renderer = $this->container->make( MetaTagRenderer::class );
+				$renderer->render();
+			}
+		);
 
-        /** @var NewsSitemapController $newsSitemap */
-        $newsSitemap = $this->container->make(NewsSitemapController::class);
+		$hooks->addAction(
+			'wp_head',
+			function (): void {
+				/** @var SchemaOutput $schemaOutput */
+				$schemaOutput = $this->container->make( SchemaOutput::class );
+				$schemaOutput->render();
+			}
+		);
 
-        $hooks->addAction('init', $newsSitemap->registerRewriteRule(...));
-        $hooks->addFilter('query_vars', $newsSitemap->registerQueryVar(...));
-        $hooks->addAction('template_redirect', $newsSitemap->maybeRender(...));
-    }
+		$hooks->addFilter(
+			'robots_txt',
+			function ( string $output, bool $public ): string {
+				/** @var RobotsTxtBuilder $robotsTxtBuilder */
+				$robotsTxtBuilder = $this->container->make( RobotsTxtBuilder::class );
+
+				return $robotsTxtBuilder->filter( $output, $public );
+			},
+			10,
+			2
+		);
+
+		/** @var NewsSitemapController $newsSitemap */
+		$newsSitemap = $this->container->make( NewsSitemapController::class );
+
+		$hooks->addAction( 'init', $newsSitemap->registerRewriteRule( ... ) );
+		$hooks->addFilter( 'query_vars', $newsSitemap->registerQueryVar( ... ) );
+		$hooks->addAction( 'template_redirect', $newsSitemap->maybeRender( ... ) );
+	}
 }

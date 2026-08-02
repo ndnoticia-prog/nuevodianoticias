@@ -6,7 +6,7 @@ namespace NDBuilder\Contracts;
 
 use NDBuilder\Block;
 
-interface BlockRenderer
-{
-    public function render(Block $block): string;
+interface BlockRenderer {
+
+	public function render( Block $block ): string;
 }

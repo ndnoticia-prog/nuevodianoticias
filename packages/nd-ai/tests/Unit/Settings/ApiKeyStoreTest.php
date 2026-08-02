@@ -10,58 +10,56 @@ use NDAi\Tests\BrainMonkeyTestCase;
 use NDCore\Security\Encryption;
 use NDCore\Settings\SettingsRepository;
 
-final class ApiKeyStoreTest extends BrainMonkeyTestCase
-{
-    protected function setUp(): void
-    {
-        parent::setUp();
+final class ApiKeyStoreTest extends BrainMonkeyTestCase {
 
-        if (! extension_loaded('sodium')) {
-            self::markTestSkipped('La extensión "sodium" no está disponible en este entorno.');
-        }
-    }
+	protected function setUp(): void {
+		parent::setUp();
 
-    public function test_round_trips_a_key_through_encryption(): void
-    {
-        $storedValue = null;
+		if ( ! extension_loaded( 'sodium' ) ) {
+			self::markTestSkipped( 'La extensión "sodium" no está disponible en este entorno.' );
+		}
+	}
 
-        Functions\expect('update_option')->once()->andReturnUsing(
-            static function (string $name, mixed $value) use (&$storedValue): bool {
-                $storedValue = $value;
+	public function test_round_trips_a_key_through_encryption(): void {
+		$storedValue = null;
 
-                return true;
-            }
-        );
-        Functions\expect('get_option')->once()->andReturnUsing(
-            static fn (string $name, mixed $default = false): mixed => $storedValue ?? $default
-        );
+		Functions\expect( 'update_option' )->once()->andReturnUsing(
+			static function ( string $name, mixed $value ) use ( &$storedValue ): bool {
+				$storedValue = $value;
 
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
-        $store = new ApiKeyStore(new SettingsRepository(), $encryption);
+				return true;
+			}
+		);
+		Functions\expect( 'get_option' )->once()->andReturnUsing(
+			static function ( string $name, mixed $default = false ) use ( &$storedValue ): mixed {
+				return $storedValue ?? $default;
+			}
+		);
 
-        $store->set('openai', 'sk-super-secreta');
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
+		$store      = new ApiKeyStore( new SettingsRepository(), $encryption );
 
-        self::assertNotSame('sk-super-secreta', $storedValue, 'La clave nunca debe guardarse en texto plano.');
-        self::assertSame('sk-super-secreta', $store->get('openai'));
-    }
+		$store->set( 'openai', 'sk-super-secreta' );
 
-    public function test_get_returns_empty_string_when_nothing_is_stored(): void
-    {
-        Functions\expect('get_option')->once()->andReturn(false);
+		self::assertNotSame( 'sk-super-secreta', $storedValue, 'La clave nunca debe guardarse en texto plano.' );
+		self::assertSame( 'sk-super-secreta', $store->get( 'openai' ) );
+	}
 
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
-        $store = new ApiKeyStore(new SettingsRepository(), $encryption);
+	public function test_get_returns_empty_string_when_nothing_is_stored(): void {
+		Functions\expect( 'get_option' )->once()->andReturn( false );
 
-        self::assertSame('', $store->get('openai'));
-    }
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
+		$store      = new ApiKeyStore( new SettingsRepository(), $encryption );
 
-    public function test_set_with_empty_string_forgets_the_key(): void
-    {
-        Functions\expect('delete_option')->once()->andReturn(true);
+		self::assertSame( '', $store->get( 'openai' ) );
+	}
 
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
-        $store = new ApiKeyStore(new SettingsRepository(), $encryption);
+	public function test_set_with_empty_string_forgets_the_key(): void {
+		Functions\expect( 'delete_option' )->once()->andReturn( true );
 
-        self::assertTrue($store->set('openai', ''));
-    }
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
+		$store      = new ApiKeyStore( new SettingsRepository(), $encryption );
+
+		self::assertTrue( $store->set( 'openai', '' ) );
+	}
 }

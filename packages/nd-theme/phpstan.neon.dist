@@ -3,10 +3,18 @@ parameters:
     paths:
         - src
         - functions.php
+    bootstrapFiles:
+        - phpstan-bootstrap.php
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: true
     checkGenericClassInNonGenericObjectType: true
+    ignoreErrors:
+        -
+            # Block::attribute() devuelve mixed por diseño (es un value
+            # object genérico); aquí se coacciona un valor que el propio
+            # HomeContentProvider puso ahí como int (postSummary()'s
+            # 'post_id'), no un dato externo sin validar.
+            message: '#Cannot cast mixed to int#'
+            paths:
+                - src/Content/HomeContentProvider.php
 
-includes:
-    - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon

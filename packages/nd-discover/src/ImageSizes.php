@@ -11,13 +11,12 @@ namespace NDDiscover;
  * registra un tamaño propio y nd-seo/nd-theme lo usan para la imagen
  * destacada en lugar de "large".
  */
-final class ImageSizes
-{
-    public const string FEATURED = 'nd-discover-featured';
-    public const int FEATURED_WIDTH = 1200;
-    public const int FEATURED_HEIGHT = 675;
+final class ImageSizes {
 
-    private function __construct()
-    {
-    }
+	public const string FEATURED     = 'nd-discover-featured';
+	public const int FEATURED_WIDTH  = 1200;
+	public const int FEATURED_HEIGHT = 675;
+
+	private function __construct() {
+	}
 }

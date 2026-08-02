@@ -13,11 +13,11 @@ use NDCore\Events\Event;
  * otros paquetes (p. ej. nd-analytics, para registrar impresiones) escuchar
  * qué contenido se mostró sin acoplar nd-builder a ellos.
  */
-final class BlockRendered extends Event
-{
-    public function __construct(
-        public readonly Block $block,
-        public readonly string $html,
-    ) {
-    }
+final class BlockRendered extends Event {
+
+	public function __construct(
+		public readonly Block $block,
+		public readonly string $html,
+	) {
+	}
 }

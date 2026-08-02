@@ -12,45 +12,39 @@ use NDCore\Config\Config;
  * (`wp_get_attachment_url`) como para imágenes ya insertadas en el
  * contenido de las entradas.
  */
-final class CdnUrlRewriter
-{
-    public function __construct(private readonly Config $config)
-    {
-    }
+final class CdnUrlRewriter {
 
-    public function filterAttachmentUrl(string $url): string
-    {
-        return $this->rewrite($url);
-    }
+	public function __construct( private readonly Config $config ) {
+	}
 
-    public function filterContent(string $content): string
-    {
-        return $this->rewrite($content);
-    }
+	public function filterAttachmentUrl( string $url ): string {
+		return $this->rewrite( $url );
+	}
 
-    private function rewrite(string $subject): string
-    {
-        $cdnUrl = $this->cdnUrl();
+	public function filterContent( string $content ): string {
+		return $this->rewrite( $content );
+	}
 
-        if ($cdnUrl === null) {
-            return $subject;
-        }
+	private function rewrite( string $subject ): string {
+		$cdnUrl = $this->cdnUrl();
 
-        return str_replace($this->uploadsBaseUrl(), $cdnUrl, $subject);
-    }
+		if ( $cdnUrl === null ) {
+			return $subject;
+		}
 
-    private function cdnUrl(): ?string
-    {
-        $url = $this->config->get('media.cdn_url');
+		return str_replace( $this->uploadsBaseUrl(), $cdnUrl, $subject );
+	}
 
-        return is_string($url) && $url !== '' ? rtrim($url, '/') : null;
-    }
+	private function cdnUrl(): ?string {
+		$url = $this->config->get( 'media.cdn_url' );
 
-    private function uploadsBaseUrl(): string
-    {
-        $uploads = wp_get_upload_dir();
-        $baseUrl = $uploads['baseurl'] ?? '';
+		return is_string( $url ) && $url !== '' ? rtrim( $url, '/' ) : null;
+	}
 
-        return rtrim((string) $baseUrl, '/');
-    }
+	private function uploadsBaseUrl(): string {
+		$uploads = wp_get_upload_dir();
+		$baseUrl = $uploads['baseurl'] ?? '';
+
+		return rtrim( (string) $baseUrl, '/' );
+	}
 }

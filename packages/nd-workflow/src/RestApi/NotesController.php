@@ -14,73 +14,85 @@ use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
-final class NotesController extends RestController implements RegistersRoutes
-{
-    public function __construct(private readonly EditorialNoteRepository $notes)
-    {
-    }
+final class NotesController extends RestController implements RegistersRoutes {
 
-    public function registerRoutes(Router $router): void
-    {
-        $permission = static fn (): bool => current_user_can(Capability::EDIT_ND_WORKFLOW);
-        $idArg = ['id' => ['type' => 'integer', 'required' => true]];
+	public function __construct( private readonly EditorialNoteRepository $notes ) {
+	}
 
-        $router->get('nd/v1', '/workflow/posts/(?P<id>\d+)/notes', [$this, 'index'], $permission, $idArg);
+	public function registerRoutes( Router $router ): void {
+		$permission = static fn (): bool => current_user_can( Capability::EDIT_ND_WORKFLOW );
+		$idArg      = array(
+			'id' => array(
+				'type'     => 'integer',
+				'required' => true,
+			),
+		);
 
-        $router->post('nd/v1', '/workflow/posts/(?P<id>\d+)/notes', [$this, 'store'], $permission, $idArg + [
-            'body' => ['type' => 'string', 'required' => true],
-            'type' => ['type' => 'string', 'required' => false],
-        ]);
+		$router->get( 'nd/v1', '/workflow/posts/(?P<id>\d+)/notes', array( $this, 'index' ), $permission, $idArg );
 
-        $router->delete('nd/v1', '/workflow/notes/(?P<id>\d+)', [$this, 'destroy'], $permission, $idArg);
-    }
+		$router->post(
+			'nd/v1',
+			'/workflow/posts/(?P<id>\d+)/notes',
+			array( $this, 'store' ),
+			$permission,
+			$idArg + array(
+				'body' => array(
+					'type'     => 'string',
+					'required' => true,
+				),
+				'type' => array(
+					'type'     => 'string',
+					'required' => false,
+				),
+			)
+		);
 
-    public function index(WP_REST_Request $request): WP_REST_Response
-    {
-        $notes = $this->notes->forPost((int) $request->get_param('id'));
+		$router->delete( 'nd/v1', '/workflow/notes/(?P<id>\d+)', array( $this, 'destroy' ), $permission, $idArg );
+	}
 
-        return $this->success(['data' => array_map($this->serialize(...), $notes)]);
-    }
+	public function index( WP_REST_Request $request ): WP_REST_Response {
+		$notes = $this->notes->forPost( (int) $request->get_param( 'id' ) );
 
-    public function store(WP_REST_Request $request): WP_REST_Response|WP_Error
-    {
-        $body = (string) $request->get_param('body');
+		return $this->success( array( 'data' => array_map( $this->serialize( ... ), $notes ) ) );
+	}
 
-        if (trim($body) === '') {
-            return $this->error('nd_workflow_empty_note', __('El comentario no puede estar vacío.', 'nd-workflow'), 422);
-        }
+	public function store( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$body = (string) $request->get_param( 'body' );
 
-        $type = (string) ($request->get_param('type') ?: EditorialNote::TYPE_NOTE);
+		if ( trim( $body ) === '' ) {
+			return $this->error( 'nd_workflow_empty_note', __( 'El comentario no puede estar vacío.', 'nd-workflow' ), 422 );
+		}
 
-        $note = $this->notes->create(
-            (int) $request->get_param('id'),
-            get_current_user_id(),
-            sanitize_textarea_field($body),
-            $type
-        );
+		$type = $request->get_param( 'type' );
+		$type = is_string( $type ) && $type !== '' ? $type : EditorialNote::TYPE_NOTE;
 
-        return $this->success(['data' => $this->serialize($note)], 201);
-    }
+		$note = $this->notes->create(
+			(int) $request->get_param( 'id' ),
+			get_current_user_id(),
+			sanitize_textarea_field( $body ),
+			$type
+		);
 
-    public function destroy(WP_REST_Request $request): WP_REST_Response
-    {
-        $this->notes->delete((int) $request->get_param('id'));
+		return $this->success( array( 'data' => $this->serialize( $note ) ), 201 );
+	}
 
-        return $this->success([], 204);
-    }
+	public function destroy( WP_REST_Request $request ): WP_REST_Response {
+		$this->notes->delete( (int) $request->get_param( 'id' ) );
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function serialize(EditorialNote $note): array
-    {
-        return [
-            'id' => $note->id,
-            'post_id' => $note->postId,
-            'author_id' => $note->authorId,
-            'type' => $note->type,
-            'body' => $note->body,
-            'created_at' => $note->createdAt,
-        ];
-    }
+		return $this->success( array(), 204 );
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function serialize( EditorialNote $note ): array {
+		return array(
+			'id'         => $note->id,
+			'post_id'    => $note->postId,
+			'author_id'  => $note->authorId,
+			'type'       => $note->type,
+			'body'       => $note->body,
+			'created_at' => $note->createdAt,
+		);
+	}
 }

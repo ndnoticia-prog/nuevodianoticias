@@ -9,99 +9,88 @@ use NDAi\Contracts\AiProvider;
 use NDAi\Tasks\ContentAssistant;
 use PHPUnit\Framework\TestCase;
 
-final class ContentAssistantTestRecordingProvider implements AiProvider
-{
-    public ?string $lastPrompt = null;
+final class ContentAssistantTestRecordingProvider implements AiProvider {
 
-    public function __construct(private readonly string $reply)
-    {
-    }
+	public ?string $lastPrompt = null;
 
-    public function key(): string
-    {
-        return 'stub';
-    }
+	public function __construct( private readonly string $reply ) {
+	}
 
-    public function complete(string $prompt, array $options = []): string
-    {
-        $this->lastPrompt = $prompt;
+	public function key(): string {
+		return 'stub';
+	}
 
-        return $this->reply;
-    }
+	public function complete( string $prompt, array $options = array() ): string {
+		$this->lastPrompt = $prompt;
+
+		return $this->reply;
+	}
 }
 
-final class ContentAssistantTest extends TestCase
-{
-    private function assistant(string $reply): array
-    {
-        $provider = new ContentAssistantTestRecordingProvider($reply);
-        $manager = new AiManager([$provider], 'stub');
+final class ContentAssistantTest extends TestCase {
 
-        return [new ContentAssistant($manager), $provider];
-    }
+	private function assistant( string $reply ): array {
+		$provider = new ContentAssistantTestRecordingProvider( $reply );
+		$manager  = new AiManager( array( $provider ), 'stub' );
 
-    public function test_generate_headlines_splits_numbered_lines(): void
-    {
-        [$assistant] = $this->assistant("1. Primer titular\n2) Segundo titular\n- Tercer titular");
+		return array( new ContentAssistant( $manager ), $provider );
+	}
 
-        self::assertSame(
-            ['Primer titular', 'Segundo titular', 'Tercer titular'],
-            $assistant->generateHeadlines('cuerpo del artículo')
-        );
-    }
+	public function test_generate_headlines_splits_numbered_lines(): void {
+		[$assistant] = $this->assistant( "1. Primer titular\n2) Segundo titular\n- Tercer titular" );
 
-    public function test_generate_headlines_prompt_mentions_the_article_and_the_requested_count(): void
-    {
-        [$assistant, $provider] = $this->assistant('Titular único');
+		self::assertSame(
+			array( 'Primer titular', 'Segundo titular', 'Tercer titular' ),
+			$assistant->generateHeadlines( 'cuerpo del artículo' )
+		);
+	}
 
-        $assistant->generateHeadlines('cuerpo del artículo', 3);
+	public function test_generate_headlines_prompt_mentions_the_article_and_the_requested_count(): void {
+		[$assistant, $provider] = $this->assistant( 'Titular único' );
 
-        self::assertStringContainsString('3 titulares', (string) $provider->lastPrompt);
-        self::assertStringContainsString('cuerpo del artículo', (string) $provider->lastPrompt);
-    }
+		$assistant->generateHeadlines( 'cuerpo del artículo', 3 );
 
-    public function test_generate_tags_splits_comma_separated_list(): void
-    {
-        [$assistant] = $this->assistant('deportes, fútbol ,  colombia');
+		self::assertStringContainsString( '3 titulares', (string) $provider->lastPrompt );
+		self::assertStringContainsString( 'cuerpo del artículo', (string) $provider->lastPrompt );
+	}
 
-        self::assertSame(['deportes', 'fútbol', 'colombia'], $assistant->generateTags('texto'));
-    }
+	public function test_generate_tags_splits_comma_separated_list(): void {
+		[$assistant] = $this->assistant( 'deportes, fútbol ,  colombia' );
 
-    public function test_suggest_categories_only_returns_categories_from_the_available_list(): void
-    {
-        [$assistant] = $this->assistant('Deportes, Inventada, Economía');
+		self::assertSame( array( 'deportes', 'fútbol', 'colombia' ), $assistant->generateTags( 'texto' ) );
+	}
 
-        self::assertSame(
-            ['Deportes', 'Economía'],
-            $assistant->suggestCategories('texto', ['Deportes', 'Economía', 'Cultura'])
-        );
-    }
+	public function test_suggest_categories_only_returns_categories_from_the_available_list(): void {
+		[$assistant] = $this->assistant( 'Deportes, Inventada, Economía' );
 
-    public function test_suggest_categories_returns_empty_without_available_categories(): void
-    {
-        [$assistant, $provider] = $this->assistant('no debería llamarse');
+		self::assertSame(
+			array( 'Deportes', 'Economía' ),
+			$assistant->suggestCategories( 'texto', array( 'Deportes', 'Economía', 'Cultura' ) )
+		);
+	}
 
-        self::assertSame([], $assistant->suggestCategories('texto', []));
-        self::assertNull($provider->lastPrompt);
-    }
+	public function test_suggest_categories_returns_empty_without_available_categories(): void {
+		[$assistant, $provider] = $this->assistant( 'no debería llamarse' );
 
-    public function test_generate_social_post_includes_platform_specific_guidance_and_url(): void
-    {
-        [$assistant, $provider] = $this->assistant('post generado');
+		self::assertSame( array(), $assistant->suggestCategories( 'texto', array() ) );
+		self::assertNull( $provider->lastPrompt );
+	}
 
-        $assistant->generateSocialPost('instagram', 'texto', 'https://example.test/articulo');
+	public function test_generate_social_post_includes_platform_specific_guidance_and_url(): void {
+		[$assistant, $provider] = $this->assistant( 'post generado' );
 
-        self::assertStringContainsString('hashtags', (string) $provider->lastPrompt);
-        self::assertStringContainsString('https://example.test/articulo', (string) $provider->lastPrompt);
-    }
+		$assistant->generateSocialPost( 'instagram', 'texto', 'https://example.test/articulo' );
 
-    public function test_generate_video_script_prompt_scales_word_count_with_duration(): void
-    {
-        [$assistant, $provider] = $this->assistant('guion');
+		self::assertStringContainsString( 'hashtags', (string) $provider->lastPrompt );
+		self::assertStringContainsString( 'https://example.test/articulo', (string) $provider->lastPrompt );
+	}
 
-        $assistant->generateVideoScript('texto', 90);
+	public function test_generate_video_script_prompt_scales_word_count_with_duration(): void {
+		[$assistant, $provider] = $this->assistant( 'guion' );
 
-        self::assertStringContainsString('90 segundos', (string) $provider->lastPrompt);
-        self::assertStringContainsString('225 palabras', (string) $provider->lastPrompt);
-    }
+		$assistant->generateVideoScript( 'texto', 90 );
+
+		self::assertStringContainsString( '90 segundos', (string) $provider->lastPrompt );
+		self::assertStringContainsString( '225 palabras', (string) $provider->lastPrompt );
+	}
 }

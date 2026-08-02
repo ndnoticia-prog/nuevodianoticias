@@ -12,16 +12,16 @@ declare(strict_types=1);
 
 namespace NDCore;
 
-if (! defined('WP_UNINSTALL_PLUGIN')) {
-    exit;
+if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+	exit;
 }
 
 $autoloader = __DIR__ . '/vendor/autoload.php';
 
-if (! file_exists($autoloader)) {
-    return;
+if ( ! file_exists( $autoloader ) ) {
+	return;
 }
 
 require_once $autoloader;
 
-(new Activation\Uninstaller())->uninstall();
+( new Activation\Uninstaller() )->uninstall();

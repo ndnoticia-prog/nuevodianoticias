@@ -11,53 +11,48 @@ use NDCore\Config\Config;
  * (JPEG/PNG) en un formato moderno (WebP/AVIF) usando el filtro nativo
  * `image_editor_output_format`, sin depender de un servicio externo.
  */
-final class ModernFormatConverter
-{
-    public function __construct(private readonly Config $config)
-    {
-    }
+final class ModernFormatConverter {
 
-    /**
-     * @param array<string, string> $formats
-     *
-     * @return array<string, string>
-     */
-    public function filterOutputFormat(array $formats): array
-    {
-        $targetMime = $this->preferredMime();
+	public function __construct( private readonly Config $config ) {
+	}
 
-        if ($targetMime === null) {
-            return $formats;
-        }
+	/**
+	 * @param array<string, string> $formats
+	 *
+	 * @return array<string, string>
+	 */
+	public function filterOutputFormat( array $formats ): array {
+		$targetMime = $this->preferredMime();
 
-        $formats['image/jpeg'] = $targetMime;
-        $formats['image/png'] = $targetMime;
+		if ( $targetMime === null ) {
+			return $formats;
+		}
 
-        return $formats;
-    }
+		$formats['image/jpeg'] = $targetMime;
+		$formats['image/png']  = $targetMime;
 
-    private function preferredMime(): ?string
-    {
-        $format = $this->config->get('media.modern_format');
+		return $formats;
+	}
 
-        if ($format === 'avif') {
-            return $this->supportsAvif() ? 'image/avif' : ($this->supportsWebp() ? 'image/webp' : null);
-        }
+	private function preferredMime(): ?string {
+		$format = $this->config->get( 'media.modern_format' );
 
-        if ($format === 'webp') {
-            return $this->supportsWebp() ? 'image/webp' : null;
-        }
+		if ( $format === 'avif' ) {
+			return $this->supportsAvif() ? 'image/avif' : ( $this->supportsWebp() ? 'image/webp' : null );
+		}
 
-        return null;
-    }
+		if ( $format === 'webp' ) {
+			return $this->supportsWebp() ? 'image/webp' : null;
+		}
 
-    private function supportsAvif(): bool
-    {
-        return function_exists('imageavif');
-    }
+		return null;
+	}
 
-    private function supportsWebp(): bool
-    {
-        return function_exists('imagewebp');
-    }
+	private function supportsAvif(): bool {
+		return function_exists( 'imageavif' );
+	}
+
+	private function supportsWebp(): bool {
+		return function_exists( 'imagewebp' );
+	}
 }

@@ -9,30 +9,27 @@ namespace NDCore\Security;
  * proteger toda escritura (formularios admin, peticiones AJAX/REST) frente
  * a CSRF.
  */
-final class Nonce
-{
-    public function create(string $action): string
-    {
-        return wp_create_nonce($action);
-    }
+final class Nonce {
 
-    public function verify(string $nonce, string $action): bool
-    {
-        return wp_verify_nonce($nonce, $action) !== false;
-    }
+	public function create( string $action ): string {
+		return wp_create_nonce( $action );
+	}
 
-    /**
-     * Verifica el nonce presente en `$_REQUEST[$queryArg]` para la acción dada.
-     */
-    public function verifyRequest(string $action, string $queryArg = '_wpnonce'): bool
-    {
-        $nonce = $_REQUEST[$queryArg] ?? null;
+	public function verify( string $nonce, string $action ): bool {
+		return wp_verify_nonce( $nonce, $action ) !== false;
+	}
 
-        return is_string($nonce) && $this->verify($nonce, $action);
-    }
+	/**
+	 * Verifica el nonce presente en `$_REQUEST[$queryArg]` para la acción dada.
+	 */
+	public function verifyRequest( string $action, string $queryArg = '_wpnonce' ): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- el valor se pasa directamente a self::verify(), que llama a wp_verify_nonce().
+		$nonce = $_REQUEST[ $queryArg ] ?? null;
 
-    public function field(string $action, string $name = '_wpnonce', bool $referer = true): string
-    {
-        return (string) wp_nonce_field($action, $name, $referer, false);
-    }
+		return is_string( $nonce ) && $this->verify( $nonce, $action );
+	}
+
+	public function field( string $action, string $name = '_wpnonce', bool $referer = true ): string {
+		return (string) wp_nonce_field( $action, $name, $referer, false );
+	}
 }

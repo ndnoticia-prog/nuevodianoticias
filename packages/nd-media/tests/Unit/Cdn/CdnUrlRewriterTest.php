@@ -9,43 +9,40 @@ use NDCore\Config\Config;
 use NDMedia\Cdn\CdnUrlRewriter;
 use NDMedia\Tests\BrainMonkeyTestCase;
 
-final class CdnUrlRewriterTest extends BrainMonkeyTestCase
-{
-    public function test_rewrites_attachment_url_to_cdn_domain(): void
-    {
-        Functions\when('wp_get_upload_dir')->justReturn(['baseurl' => 'https://example.test/wp-content/uploads']);
+final class CdnUrlRewriterTest extends BrainMonkeyTestCase {
 
-        $config = new Config(['media' => ['cdn_url' => 'https://cdn.example.test']]);
-        $rewriter = new CdnUrlRewriter($config);
+	public function test_rewrites_attachment_url_to_cdn_domain(): void {
+		Functions\when( 'wp_get_upload_dir' )->justReturn( array( 'baseurl' => 'https://example.test/wp-content/uploads' ) );
 
-        self::assertSame(
-            'https://cdn.example.test/2026/01/foto.jpg',
-            $rewriter->filterAttachmentUrl('https://example.test/wp-content/uploads/2026/01/foto.jpg')
-        );
-    }
+		$config   = new Config( array( 'media' => array( 'cdn_url' => 'https://cdn.example.test' ) ) );
+		$rewriter = new CdnUrlRewriter( $config );
 
-    public function test_rewrites_urls_found_inside_content(): void
-    {
-        Functions\when('wp_get_upload_dir')->justReturn(['baseurl' => 'https://example.test/wp-content/uploads']);
+		self::assertSame(
+			'https://cdn.example.test/2026/01/foto.jpg',
+			$rewriter->filterAttachmentUrl( 'https://example.test/wp-content/uploads/2026/01/foto.jpg' )
+		);
+	}
 
-        $config = new Config(['media' => ['cdn_url' => 'https://cdn.example.test']]);
-        $rewriter = new CdnUrlRewriter($config);
+	public function test_rewrites_urls_found_inside_content(): void {
+		Functions\when( 'wp_get_upload_dir' )->justReturn( array( 'baseurl' => 'https://example.test/wp-content/uploads' ) );
 
-        $content = '<img src="https://example.test/wp-content/uploads/foto.jpg">';
+		$config   = new Config( array( 'media' => array( 'cdn_url' => 'https://cdn.example.test' ) ) );
+		$rewriter = new CdnUrlRewriter( $config );
 
-        self::assertSame(
-            '<img src="https://cdn.example.test/foto.jpg">',
-            $rewriter->filterContent($content)
-        );
-    }
+		$content = '<img src="https://example.test/wp-content/uploads/foto.jpg">';
 
-    public function test_leaves_urls_untouched_without_configured_cdn(): void
-    {
-        $config = new Config();
-        $rewriter = new CdnUrlRewriter($config);
+		self::assertSame(
+			'<img src="https://cdn.example.test/foto.jpg">',
+			$rewriter->filterContent( $content )
+		);
+	}
 
-        $url = 'https://example.test/wp-content/uploads/foto.jpg';
+	public function test_leaves_urls_untouched_without_configured_cdn(): void {
+		$config   = new Config();
+		$rewriter = new CdnUrlRewriter( $config );
 
-        self::assertSame($url, $rewriter->filterAttachmentUrl($url));
-    }
+		$url = 'https://example.test/wp-content/uploads/foto.jpg';
+
+		self::assertSame( $url, $rewriter->filterAttachmentUrl( $url ) );
+	}
 }

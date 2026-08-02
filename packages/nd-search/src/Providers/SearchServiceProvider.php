@@ -13,39 +13,61 @@ use NDSearch\Repository\SearchIndexRepository;
 use WP_Post;
 use WP_Query;
 
-final class SearchServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->container->singleton(SearchIndexRepository::class);
-        $this->container->singleton(SearchIndexer::class);
-        $this->container->singleton(SearchQueryOverride::class);
-    }
+final class SearchServiceProvider extends ServiceProvider {
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+	public function register(): void {
+		$this->container->singleton( SearchIndexRepository::class );
+		$this->container->singleton( SearchIndexer::class );
+		$this->container->singleton( SearchQueryOverride::class );
+	}
 
-        $hooks->addAction('save_post', function (int $postId, WP_Post $post): void {
-            $this->container->make(SearchIndexer::class)->handleSaved($postId, $post);
-        }, 10, 2);
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        $hooks->addAction('before_delete_post', function (int $postId): void {
-            $this->container->make(SearchIndexer::class)->handleDeleted($postId);
-        });
+		$hooks->addAction(
+			'save_post',
+			function ( int $postId, WP_Post $post ): void {
+				/** @var SearchIndexer $indexer */
+				$indexer = $this->container->make( SearchIndexer::class );
+				$indexer->handleSaved( $postId, $post );
+			},
+			10,
+			2
+		);
 
-        $hooks->addAction('pre_get_posts', function (WP_Query $query): void {
-            $this->container->make(SearchQueryOverride::class)->overridePostIds($query);
-        });
+		$hooks->addAction(
+			'before_delete_post',
+			function ( int $postId ): void {
+				/** @var SearchIndexer $indexer */
+				$indexer = $this->container->make( SearchIndexer::class );
+				$indexer->handleDeleted( $postId );
+			}
+		);
 
-        $hooks->addFilter('posts_search', function (string $search, WP_Query $query): string {
-            return $this->container->make(SearchQueryOverride::class)->neutralizeDefaultSearchSql($search, $query);
-        }, 10, 2);
-    }
+		$hooks->addAction(
+			'pre_get_posts',
+			function ( WP_Query $query ): void {
+				/** @var SearchQueryOverride $override */
+				$override = $this->container->make( SearchQueryOverride::class );
+				$override->overridePostIds( $query );
+			}
+		);
 
-    public function migrations(): array
-    {
-        return [CreateSearchIndexTable::class];
-    }
+		$hooks->addFilter(
+			'posts_search',
+			function ( string $search, WP_Query $query ): string {
+				/** @var SearchQueryOverride $override */
+				$override = $this->container->make( SearchQueryOverride::class );
+
+				return $override->neutralizeDefaultSearchSql( $search, $query );
+			},
+			10,
+			2
+		);
+	}
+
+	public function migrations(): array {
+		return array( CreateSearchIndexTable::class );
+	}
 }

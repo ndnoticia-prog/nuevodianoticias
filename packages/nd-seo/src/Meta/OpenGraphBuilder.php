@@ -6,48 +6,51 @@ namespace NDSeo\Meta;
 
 use NDSeo\Context\SeoContext;
 
-final class OpenGraphBuilder
-{
-    /**
-     * @return array<string, string>
-     */
-    public function build(SeoContext $context): array
-    {
-        $tags = [
-            'og:type' => $context->type === 'article' ? 'article' : 'website',
-            'og:title' => $context->title,
-            'og:site_name' => (string) get_bloginfo('name'),
-            'og:locale' => (string) get_locale(),
-        ];
+final class OpenGraphBuilder {
 
-        if ($context->canonicalUrl !== '') {
-            $tags['og:url'] = $context->canonicalUrl;
-        }
+	/**
+	 * @return array<string, string>
+	 */
+	public function build( SeoContext $context ): array {
+		$tags = array(
+			'og:type'      => $context->type === 'article' ? 'article' : 'website',
+			'og:title'     => $context->title,
+			'og:site_name' => (string) get_bloginfo( 'name' ),
+			'og:locale'    => (string) get_locale(),
+		);
 
-        if ($context->description !== '') {
-            $tags['og:description'] = $context->description;
-        }
+		if ( $context->canonicalUrl !== '' ) {
+			$tags['og:url'] = $context->canonicalUrl;
+		}
 
-        if ($context->imageUrl !== null) {
-            $tags['og:image'] = $context->imageUrl;
-        }
+		if ( $context->description !== '' ) {
+			$tags['og:description'] = $context->description;
+		}
 
-        if ($context->type === 'article' && $context->post !== null) {
-            $tags['article:published_time'] = get_the_date(DATE_W3C, $context->post);
+		if ( $context->imageUrl !== null ) {
+			$tags['og:image'] = $context->imageUrl;
+		}
 
-            $modified = get_the_modified_date(DATE_W3C, $context->post);
+		if ( $context->type === 'article' && $context->post !== null ) {
+			$published = get_the_date( DATE_W3C, $context->post );
 
-            if ($modified !== '') {
-                $tags['article:modified_time'] = $modified;
-            }
+			if ( is_string( $published ) && $published !== '' ) {
+				$tags['article:published_time'] = $published;
+			}
 
-            foreach (get_the_category($context->post) as $category) {
-                $tags['article:section'] = $category->name;
+			$modified = get_the_modified_date( DATE_W3C, $context->post );
 
-                break;
-            }
-        }
+			if ( is_string( $modified ) && $modified !== '' ) {
+				$tags['article:modified_time'] = $modified;
+			}
 
-        return $tags;
-    }
+			foreach ( get_the_category( $context->post->ID ) as $category ) {
+				$tags['article:section'] = (string) $category->name;
+
+				break;
+			}
+		}
+
+		return $tags;
+	}
 }

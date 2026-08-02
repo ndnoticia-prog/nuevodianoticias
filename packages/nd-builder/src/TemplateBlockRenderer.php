@@ -14,44 +14,44 @@ use RuntimeException;
  * cualquier `template-part` de WordPress— y la incluye con `$block`
  * disponible en su scope. Ningún HTML vive en este paquete.
  */
-final class TemplateBlockRenderer implements BlockRenderer
-{
-    /**
-     * @param list<string> $candidateTemplates Rutas relativas sin extensión (p. ej. "template-parts/blocks/hero"), probadas en orden.
-     */
-    public function __construct(private readonly array $candidateTemplates)
-    {
-    }
+final class TemplateBlockRenderer implements BlockRenderer {
 
-    public function render(Block $block): string
-    {
-        $templates = array_map(
-            static fn (string $template): string => $template . '.php',
-            $this->candidateTemplates
-        );
+	/**
+	 * @param list<string> $candidateTemplates Rutas relativas sin extensión (p. ej. "template-parts/blocks/hero"), probadas en orden.
+	 */
+	public function __construct( private readonly array $candidateTemplates ) {
+	}
 
-        $located = locate_template($templates, false);
+	public function render( Block $block ): string {
+		$templates = array_map(
+			static fn ( string $template ): string => $template . '.php',
+			$this->candidateTemplates
+		);
 
-        if ($located === '') {
-            throw new RuntimeException(sprintf(
-                'No se encontró ninguna plantilla para el bloque "%s". Rutas probadas: %s.',
-                $block->type,
-                implode(', ', $templates)
-            ));
-        }
+		$located = locate_template( $templates, false );
 
-        return $this->renderTemplate($located, $block);
-    }
+		if ( $located === '' ) {
+			throw new RuntimeException(
+				sprintf(
+					'No se encontró ninguna plantilla para el bloque "%s". Rutas probadas: %s.',
+					$block->type,
+					implode( ', ', $templates )
+				)
+			);
+		}
 
-    private function renderTemplate(string $templatePath, Block $block): string
-    {
-        $renderIsolated = static function (string $templatePath, Block $block): string {
-            ob_start();
-            include $templatePath;
+		return $this->renderTemplate( $located, $block );
+	}
 
-            return (string) ob_get_clean();
-        };
+	private function renderTemplate( string $templatePath, Block $block ): string {
+		// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- $block debe quedar en el scope local para que la plantilla incluida pueda leerlo (ver docblock de la clase).
+		$renderIsolated = static function ( string $templatePath, Block $block ): string {
+			ob_start();
+			include $templatePath;
 
-        return $renderIsolated($templatePath, $block);
-    }
+			return (string) ob_get_clean();
+		};
+
+		return $renderIsolated( $templatePath, $block );
+	}
 }

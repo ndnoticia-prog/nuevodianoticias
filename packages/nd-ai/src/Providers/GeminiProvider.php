@@ -8,60 +8,63 @@ use NDAi\Contracts\AiProvider;
 use NDAi\Exceptions\AiProviderException;
 use NDCore\Http\Client;
 use NDCore\Http\Request;
+use NDCore\Support\Arr;
 
-final class GeminiProvider implements AiProvider
-{
-    public function __construct(
-        private readonly Client $http,
-        private readonly string $apiKey,
-        private readonly string $model = 'gemini-2.0-flash',
-    ) {
-    }
+final class GeminiProvider implements AiProvider {
 
-    public function key(): string
-    {
-        return 'gemini';
-    }
+	public function __construct(
+		private readonly Client $http,
+		private readonly string $apiKey,
+		private readonly string $model = 'gemini-2.0-flash',
+	) {
+	}
 
-    /**
-     * @param array<string, mixed> $options
-     */
-    public function complete(string $prompt, array $options = []): string
-    {
-        if ($this->apiKey === '') {
-            throw new AiProviderException('nd-ai: no hay una clave de API configurada para Gemini.');
-        }
+	public function key(): string {
+		return 'gemini';
+	}
 
-        $model = is_string($options['model'] ?? null) ? $options['model'] : $this->model;
-        $url = sprintf(
-            'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s',
-            rawurlencode($model),
-            rawurlencode($this->apiKey)
-        );
+	/**
+	 * @param array<string, mixed> $options
+	 */
+	public function complete( string $prompt, array $options = array() ): string {
+		if ( $this->apiKey === '' ) {
+			throw new AiProviderException( 'nd-ai: no hay una clave de API configurada para Gemini.' );
+		}
 
-        $response = $this->http->send(new Request(
-            method: 'POST',
-            url: $url,
-            headers: ['Content-Type' => 'application/json'],
-            body: (string) wp_json_encode([
-                'contents' => [
-                    ['parts' => [['text' => $prompt]]],
-                ],
-            ]),
-            timeoutSeconds: 30,
-        ));
+		$model = is_string( $options['model'] ?? null ) ? $options['model'] : $this->model;
+		$url   = sprintf(
+			'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s',
+			rawurlencode( $model ),
+			rawurlencode( $this->apiKey )
+		);
 
-        if ($response->failed()) {
-            throw new AiProviderException('nd-ai: error al llamar a Gemini: ' . ($response->errorMessage ?? $response->body));
-        }
+		$response = $this->http->send(
+			new Request(
+				method: 'POST',
+				url: $url,
+				headers: array( 'Content-Type' => 'application/json' ),
+				body: (string) wp_json_encode(
+					array(
+						'contents' => array(
+							array( 'parts' => array( array( 'text' => $prompt ) ) ),
+						),
+					)
+				),
+				timeoutSeconds: 30,
+			)
+		);
 
-        $data = $response->json();
-        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+		if ( $response->failed() ) {
+			throw new AiProviderException( 'nd-ai: error al llamar a Gemini: ' . ( $response->errorMessage ?? $response->body ) );
+		}
 
-        if (! is_string($text) || trim($text) === '') {
-            throw new AiProviderException('nd-ai: respuesta de Gemini sin contenido de texto.');
-        }
+		$data = $response->json();
+		$text = Arr::get( $data, 'candidates.0.content.parts.0.text' );
 
-        return trim($text);
-    }
+		if ( ! is_string( $text ) || trim( $text ) === '' ) {
+			throw new AiProviderException( 'nd-ai: respuesta de Gemini sin contenido de texto.' );
+		}
+
+		return trim( $text );
+	}
 }

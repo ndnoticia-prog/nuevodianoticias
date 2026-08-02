@@ -6,6 +6,6 @@ namespace NDAi\Exceptions;
 
 use RuntimeException;
 
-final class AiProviderException extends RuntimeException
-{
+final class AiProviderException extends RuntimeException {
+
 }

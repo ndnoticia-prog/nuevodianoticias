@@ -4,66 +4,73 @@ declare(strict_types=1);
 
 namespace NDCore\Tests\Unit\Hooks;
 
-use Brain\Monkey\Actions;
-use Brain\Monkey\Filters;
+use Brain\Monkey\Functions;
+use Closure;
+use Mockery;
 use NDCore\Hooks\HookManager;
 use NDCore\Tests\BrainMonkeyTestCase;
 
-final class HookManagerTest extends BrainMonkeyTestCase
-{
-    public function test_add_action_registers_with_wordpress_and_remembers_handle(): void
-    {
-        $manager = new HookManager();
-        $callback = static function (): void {
-        };
+final class HookManagerTest extends BrainMonkeyTestCase {
 
-        Actions\expectAdded('nd_core/booted')->once()->with('nd_core/booted', $callback, 10, 1);
+	public function test_add_action_registers_with_wordpress_and_remembers_handle(): void {
+		$manager  = new HookManager();
+		$callback = static function (): void {
+		};
 
-        $handle = $manager->addAction('nd_core/booted', $callback);
+		Functions\expect( 'add_action' )
+			->once()
+			->with( 'nd_core/booted', Mockery::type( Closure::class ), 10, 1 )
+			->andReturn( true );
 
-        self::assertSame('action', $handle->type);
-        self::assertSame('nd_core/booted', $handle->hookName);
-        self::assertCount(1, $manager->registered());
-    }
+		$handle = $manager->addAction( 'nd_core/booted', $callback );
 
-    public function test_add_filter_registers_with_wordpress(): void
-    {
-        $manager = new HookManager();
-        $callback = static fn (array $value): array => $value;
+		self::assertSame( 'action', $handle->type );
+		self::assertSame( 'nd_core/booted', $handle->hookName );
+		self::assertCount( 1, $manager->registered() );
+	}
 
-        Filters\expectAdded('nd_core/providers')->once()->with('nd_core/providers', $callback, 20, 1);
+	public function test_add_filter_registers_with_wordpress(): void {
+		$manager  = new HookManager();
+		$callback = static fn ( array $value ): array => $value;
 
-        $handle = $manager->addFilter('nd_core/providers', $callback, 20);
+		Functions\expect( 'add_filter' )
+			->once()
+			->with( 'nd_core/providers', Mockery::type( Closure::class ), 20, 1 )
+			->andReturn( true );
 
-        self::assertSame('filter', $handle->type);
-    }
+		$handle = $manager->addFilter( 'nd_core/providers', $callback, 20 );
 
-    public function test_do_action_and_apply_filters_delegate_to_wordpress(): void
-    {
-        $manager = new HookManager();
+		self::assertSame( 'filter', $handle->type );
+	}
 
-        Actions\expectDone('nd_core/booted')->once()->with('payload');
-        $manager->doAction('nd_core/booted', 'payload');
+	public function test_do_action_and_apply_filters_delegate_to_wordpress(): void {
+		$manager = new HookManager();
 
-        Filters\expectApplied('nd_core/providers')->once()->with(['a'], 'extra')->andReturn(['a', 'b']);
-        $result = $manager->applyFilters('nd_core/providers', ['a'], 'extra');
+		Functions\expect( 'do_action' )->once()->with( 'nd_core/booted', 'payload' );
+		$manager->doAction( 'nd_core/booted', 'payload' );
 
-        self::assertSame(['a', 'b'], $result);
-    }
+		Functions\expect( 'apply_filters' )->once()->with( 'nd_core/providers', array( 'a' ), 'extra' )->andReturn( array( 'a', 'b' ) );
+		$result = $manager->applyFilters( 'nd_core/providers', array( 'a' ), 'extra' );
 
-    public function test_remove_forgets_the_handle(): void
-    {
-        $manager = new HookManager();
-        $callback = static function (): void {
-        };
+		self::assertSame( array( 'a', 'b' ), $result );
+	}
 
-        Actions\expectAdded('nd_core/booted')->once()->andReturn(true);
-        $handle = $manager->addAction('nd_core/booted', $callback);
+	public function test_remove_forgets_the_handle(): void {
+		$manager  = new HookManager();
+		$callback = static function (): void {
+		};
 
-        Actions\expectRemoved('nd_core/booted')->once()->andReturn(true);
+		Functions\expect( 'add_action' )->once()->andReturn( true );
+		$handle = $manager->addAction( 'nd_core/booted', $callback );
 
-        $manager->remove($handle);
+		Functions\expect( 'remove_action' )
+			->once()
+			->with( 'nd_core/booted', Mockery::type( Closure::class ), 10 )
+			->andReturn( true );
 
-        self::assertCount(0, $manager->registered());
-    }
+		$removed = $manager->remove( $handle );
+
+		self::assertTrue( $removed );
+		self::assertCount( 0, $manager->registered() );
+	}
 }

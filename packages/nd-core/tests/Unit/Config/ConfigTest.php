@@ -7,73 +7,68 @@ namespace NDCore\Tests\Unit\Config;
 use NDCore\Config\Config;
 use PHPUnit\Framework\TestCase;
 
-final class ConfigTest extends TestCase
-{
-    private string $tempDirectory;
+final class ConfigTest extends TestCase {
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+	private string $tempDirectory;
 
-        $this->tempDirectory = sys_get_temp_dir() . '/nd-core-config-test-' . bin2hex(random_bytes(4));
-        mkdir($this->tempDirectory);
-    }
+	protected function setUp(): void {
+		parent::setUp();
 
-    protected function tearDown(): void
-    {
-        foreach (glob($this->tempDirectory . '/*.php') ?: [] as $file) {
-            unlink($file);
-        }
+		$this->tempDirectory = sys_get_temp_dir() . '/nd-core-config-test-' . bin2hex( random_bytes( 4 ) );
+		mkdir( $this->tempDirectory );
+	}
 
-        rmdir($this->tempDirectory);
+	protected function tearDown(): void {
+		$files = glob( $this->tempDirectory . '/*.php' );
 
-        parent::tearDown();
-    }
+		foreach ( $files !== false ? $files : array() as $file ) {
+			unlink( $file );
+		}
 
-    public function test_get_and_set_support_dot_notation(): void
-    {
-        $config = new Config();
+		rmdir( $this->tempDirectory );
 
-        $config->set('cache.driver', 'redis');
-        $config->set('cache.redis.host', '127.0.0.1');
+		parent::tearDown();
+	}
 
-        self::assertSame('redis', $config->get('cache.driver'));
-        self::assertSame('127.0.0.1', $config->get('cache.redis.host'));
-        self::assertSame(['host' => '127.0.0.1'], $config->get('cache.redis'));
-    }
+	public function test_get_and_set_support_dot_notation(): void {
+		$config = new Config();
 
-    public function test_get_returns_default_for_missing_key(): void
-    {
-        $config = new Config();
+		$config->set( 'cache.driver', 'redis' );
+		$config->set( 'cache.redis.host', '127.0.0.1' );
 
-        self::assertSame('fallback', $config->get('missing.key', 'fallback'));
-    }
+		self::assertSame( 'redis', $config->get( 'cache.driver' ) );
+		self::assertSame( '127.0.0.1', $config->get( 'cache.redis.host' ) );
+		self::assertSame( array( 'host' => '127.0.0.1' ), $config->get( 'cache.redis' ) );
+	}
 
-    public function test_has_distinguishes_missing_from_present(): void
-    {
-        $config = new Config(['flag' => false]);
+	public function test_get_returns_default_for_missing_key(): void {
+		$config = new Config();
 
-        self::assertTrue($config->has('flag'));
-        self::assertFalse($config->has('missing'));
-    }
+		self::assertSame( 'fallback', $config->get( 'missing.key', 'fallback' ) );
+	}
 
-    public function test_load_directory_merges_php_files_under_their_filename_key(): void
-    {
-        file_put_contents($this->tempDirectory . '/cache.php', "<?php\nreturn ['driver' => 'transient', 'ttl' => 3600];\n");
+	public function test_has_distinguishes_missing_from_present(): void {
+		$config = new Config( array( 'flag' => false ) );
 
-        $config = new Config();
-        $config->loadDirectory($this->tempDirectory);
+		self::assertTrue( $config->has( 'flag' ) );
+		self::assertFalse( $config->has( 'missing' ) );
+	}
 
-        self::assertSame('transient', $config->get('cache.driver'));
-        self::assertSame(3600, $config->get('cache.ttl'));
-    }
+	public function test_load_directory_merges_php_files_under_their_filename_key(): void {
+		file_put_contents( $this->tempDirectory . '/cache.php', "<?php\nreturn ['driver' => 'transient', 'ttl' => 3600];\n" );
 
-    public function test_load_directory_on_missing_path_is_a_no_op(): void
-    {
-        $config = new Config(['existing' => true]);
+		$config = new Config();
+		$config->loadDirectory( $this->tempDirectory );
 
-        $config->loadDirectory($this->tempDirectory . '/does-not-exist');
+		self::assertSame( 'transient', $config->get( 'cache.driver' ) );
+		self::assertSame( 3600, $config->get( 'cache.ttl' ) );
+	}
 
-        self::assertTrue($config->get('existing'));
-    }
+	public function test_load_directory_on_missing_path_is_a_no_op(): void {
+		$config = new Config( array( 'existing' => true ) );
+
+		$config->loadDirectory( $this->tempDirectory . '/does-not-exist' );
+
+		self::assertTrue( $config->get( 'existing' ) );
+	}
 }

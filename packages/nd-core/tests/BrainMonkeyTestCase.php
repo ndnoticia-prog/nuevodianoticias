@@ -11,17 +11,15 @@ use PHPUnit\Framework\TestCase;
  * Caso de prueba base para clases que dependen de funciones nativas de
  * WordPress, simuladas con Brain Monkey en lugar de un WordPress real.
  */
-abstract class BrainMonkeyTestCase extends TestCase
-{
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Monkey\setUp();
-    }
+abstract class BrainMonkeyTestCase extends TestCase {
 
-    protected function tearDown(): void
-    {
-        Monkey\tearDown();
-        parent::tearDown();
-    }
+	protected function setUp(): void {
+		parent::setUp();
+		Monkey\setUp();
+	}
+
+	protected function tearDown(): void {
+		Monkey\tearDown();
+		parent::tearDown();
+	}
 }

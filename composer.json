@@ -3,7 +3,7 @@
     "description": "ND Platform monorepo — tooling workspace for the ND Core and ND Theme WordPress packages.",
     "type": "project",
     "license": "GPL-2.0-or-later",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
         "optimize-autoloader": true,
@@ -20,7 +20,6 @@
         { "type": "path", "url": "packages/nd-core" },
         { "type": "path", "url": "packages/nd-theme" },
         { "type": "path", "url": "packages/nd-builder" },
-        { "type": "path", "url": "packages/nd-api" },
         { "type": "path", "url": "packages/nd-seo" },
         { "type": "path", "url": "packages/nd-ads" },
         { "type": "path", "url": "packages/nd-media" },

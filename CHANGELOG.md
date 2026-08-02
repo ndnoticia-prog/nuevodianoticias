@@ -14,6 +14,27 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `package.json` raíz con npm workspaces para `nd-theme` y `nd-builder`, y Vite como bundler.
 - Licencia GPL-2.0-or-later.
 
+## Verificación real del toolchain (alpha.1–alpha.5)
+
+Con PHP 8.3+/Composer/Node ya instalados, se ejecutó por primera vez `composer install` y `composer run check` (PHPCS/WPCS + PHPStan nivel máximo + PHPUnit) en los 13 paquetes, además de `npm install && npm run build` en `nd-theme`. Resultado: **0 errores/warnings de PHPCS, 0 errores de PHPStan y 157 pruebas PHPUnit en verde en los 13 paquetes**; el build de Vite genera `dist/app.css`/`dist/app.js` correctamente. Esto resuelve todas las notas "Pending verification: composer install && composer run check sigue pendiente" de alpha.1 a alpha.5.
+
+### Fixed
+
+Bugs reales encontrados y corregidos durante la verificación (no solo ruido de linter):
+
+- **`nd-core`**: `Activator`/`Deactivator`/`Uninstaller` ignoraban por completo el flag `$networkWide` — en una red multisitio, activar/desactivar/desinstalar el plugin "en toda la red" solo afectaba al sitio actual, dejando el resto de sitios sin tablas propias o con cron huérfano. Ahora iteran `get_sites()` + `switch_to_blog()` cuando corresponde.
+- **`nd-seo`, `nd-cache`**: `get_the_category()`/`get_the_category($post)` recibía un objeto `WP_Post` en vez del ID esperado (`OpenGraphBuilder`, `BreadcrumbBuilder`, `CacheInvalidator`); funcionaba por la tolerancia interna de WordPress pero no era el contrato documentado.
+- **`nd-seo`**: `OpenGraphBuilder` podía filtrar `false` (fallo de `get_the_date()`/`get_the_modified_date()`) dentro de un array tipado como solo-strings, produciendo una etiqueta OpenGraph con valor `false` en vez de omitirla.
+- **`nd-cache`, `nd-search`**: `wp_is_post_revision()`/`wp_is_post_autosave()` devuelven `int|false`, no `bool`; el `||` los trataba como booleanos, lo que en PHPStan nivel `max` señaló una comparación implícita imprecisa.
+- **`nd-workflow`**: `CalendarRepository::postsForMonth()` indexaba por `get_the_date()`, que puede devolver `false`; un fallo silencioso habría mezclado artículos de fechas distintas bajo la misma clave `0`.
+- **Tests (`nd-seo`, `nd-media`)**: varios tests usaban `Functions\expect('mismaFuncion')->with(A)->andReturn(x)` seguido de otra expectativa `->with(B)` para la misma función — Brain Monkey no enruta por argumento entre expectativas así definidas y siempre devuelve la primera, dando falsos positivos silenciosos en `RobotsTxtBuilderTest`, `WebSiteSchemaTest`, `OrganizationSchemaTest` y `PodcastFeedEnhancerTest`. Corregido con `andReturnUsing()`.
+- **Test (`nd-ai`)**: `ApiKeyStoreTest::test_round_trips_a_key_through_encryption` fallaba porque el mock de `get_option` usaba una arrow function (`fn () => $storedValue ?? $default`), que captura `$storedValue` por valor en el momento de definirse (antes de que `update_option` lo mutara), no por referencia — el código de producción (`ApiKeyStore`, `Encryption`) era correcto; el test estaba mal escrito.
+- **Configuración del monorepo**: los `composer.json` de los 11 paquetes que dependen de `nd-core` solo declaraban `repositories` hacia `nd-core`, pero `nd-core` a su vez requiere otros 10 paquetes empaquetados — `composer install` fallaba en cada paquete si se ejecutaba de forma aislada (fuera de la raíz). Se completó el grafo de `repositories` en los 13 `composer.json`.
+- **`packages/nd-api`**: carpeta vacía sin `composer.json`, referenciada como repositorio `path` en la raíz desde el scaffold inicial pero nunca implementada (bloqueaba `composer install` de la raíz). Se retira la referencia; la decisión de no crear `nd-api` como paquete separado ya estaba documentada en alpha.5 (ver nota más abajo).
+- **`phpstan.neon.dist` (todos los paquetes salvo `nd-core`)**: incluían manualmente `vendor/szepeviktor/phpstan-wordpress/extension.neon` y `vendor/phpstan/phpstan-strict-rules/rules.neon`, que `phpstan/extension-installer` ya registra automáticamente; el doble registro hacía abortar PHPStan sin ningún resultado.
+- **`phpcs.xml.dist` (todos los paquetes)**: solo excluía `WordPress.NamingConventions.ValidVariableName`; con `WordPress-Extra` completo, WPCS asume el estilo snake_case procedural de WordPress core y marcaba como error el PSR-12 camelCase que exige la especificación del proyecto en todo el código orientado a objetos. Se afinó el ruleset (ver `docs/Architecture.md`) en vez de renombrar cientos de símbolos públicos.
+- Faltaba `patchwork.json` (`{"redefinable-internals": [...]}`) en `nd-media` y `nd-theme`, necesario para que Brain Monkey pueda interceptar `function_exists()`/`file_exists()`/`filemtime()` en sus tests.
+
 ## [0.1.0-alpha.1] - Unreleased
 
 ### Added
@@ -39,7 +60,8 @@ Paquete `nd-core` — núcleo mínimo viable de ND Platform:
 
 ### Pending verification
 
-- `composer install`, `composer run check` (PHPCS/WPCS + PHPStan nivel máximo + PHPUnit) aún no se han ejecutado en este entorno de desarrollo por falta de PHP/Composer instalados; el código se ha revisado manualmente pero no se considera "verde" hasta correr el toolchain real.
+- ~~`composer install`, `composer run check`...~~ **Resuelto**: ver "Verificación real del toolchain (alpha.1–alpha.5)" más arriba — `composer run check` en verde (0 errores PHPCS/PHPStan, 52 pruebas PHPUnit).
+- Pruebas de integración con WordPress real (`wp-env` + suite oficial de WP) para `DatabaseManager`, `Migrator` y `QueueManager`: siguen pendientes, requieren un `$wpdb`/MySQL reales y no son cubribles de forma fiable solo con Brain Monkey.
 
 ## [0.1.0-alpha.2] - Unreleased
 
@@ -73,7 +95,7 @@ Paquete `nd-theme` (nuevo) — presentación, sin lógica de negocio:
 ### Pending verification
 
 - `HomeContentProvider` depende de `WP_Query` real: no es cubrible de forma fiable con Brain Monkey; necesita pruebas de integración con WordPress real, igual que `DatabaseManager`/`Migrator` de `nd-core`.
-- `composer install && composer run check` en `nd-builder` y `nd-theme` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que `nd-core`.
+- ~~`composer install && composer run check` en `nd-builder` y `nd-theme`...~~ **Resuelto**: ver "Verificación real del toolchain (alpha.1–alpha.5)" más arriba. Además se corrigieron 4 errores reales de PHPStan en `HomeContentProvider` (accesos `WP_Post` sobre valores `int|WP_Post` de `WP_Query::$posts` sin comprobar, y una propiedad `->term_id` sobre un tipo sin verificar) y se ejecutó `npm install && npm run build` en `nd-theme` (genera `dist/app.css`/`dist/app.js` correctamente).
 
 ## [0.1.0-alpha.3] - Unreleased
 
@@ -112,7 +134,7 @@ Paquete `nd-discover` (nuevo) — requisitos técnicos de Google Discover:
 
 - `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController` dependen de `WP_Post`/`WP_Query` reales: necesitan pruebas de integración con WordPress real, mismo caso que `HomeContentProvider` en alpha.2.
 - Si `/sitemap-news.xml` devuelve 404 justo tras activar `nd-core`, es la limitación conocida de WordPress con rewrite rules añadidas durante la propia activación (ver "SEO" en `docs/Architecture.md`) — se resuelve guardando los enlaces permanentes una vez desde el admin.
-- `composer install && composer run check` en `nd-seo`, `nd-media` y `nd-discover` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.
+- ~~`composer install && composer run check` en `nd-seo`, `nd-media` y `nd-discover`...~~ **Resuelto**: ver "Verificación real del toolchain (alpha.1–alpha.5)" más arriba.
 
 ## [0.1.0-alpha.4] - Unreleased
 
@@ -159,7 +181,7 @@ Suite de pruebas PHPUnit (Brain Monkey) en los tres paquetes para las piezas com
 
 - Sin interfaz visual de administración (calendario arrastrable, gestor de campañas, panel de analítica): esta versión entrega la capa de datos y REST; la UI queda para una versión posterior.
 - `EditorialNoteRepository`, `CalendarRepository`, `CampaignRepository`, `StatsRecorder`/`StatsRepository`, `ClickRedirectController`, `PageviewRecorder`, `ImpressionRecorder` y `AnalyticsRepository` dependen de `DatabaseManager`/`WP_Query`/`WP_Post` reales: necesitan pruebas de integración con WordPress real, mismo caso ya documentado para `DatabaseManager`/`Migrator` en alpha.1.
-- `composer install && composer run check` en `nd-workflow`, `nd-ads` y `nd-analytics` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.
+- ~~`composer install && composer run check` en `nd-workflow`, `nd-ads` y `nd-analytics`...~~ **Resuelto**: ver "Verificación real del toolchain (alpha.1–alpha.5)" más arriba.
 
 ## [0.1.0-alpha.5] - Unreleased
 
@@ -194,7 +216,7 @@ Paquete `nd-cache` (nuevo) — caché de página completa:
 
 - Sin interfaz visual (gestor de claves de IA, panel de resultados de búsqueda, purga manual de caché): esta versión entrega la capa de datos/lógica y REST donde aplica.
 - `nd-search` no tiene ninguna pieza comprobable sin WordPress real (`SearchIndexRepository`/`SearchIndexer`/`SearchQueryOverride` dependen de `WP_Post`/`WP_Query`/`$wpdb`): necesita pruebas de integración completas.
-- `composer install && composer run check` en `nd-ai`, `nd-search` y `nd-cache` sigue pendiente del mismo entorno de desarrollo (PHP/Composer) que el resto de paquetes.
+- ~~`composer install && composer run check` en `nd-ai`, `nd-search` y `nd-cache`...~~ **Resuelto**: ver "Verificación real del toolchain (alpha.1–alpha.5)" más arriba.
 
 ### Note
 

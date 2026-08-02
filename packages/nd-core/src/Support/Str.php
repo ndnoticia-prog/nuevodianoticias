@@ -4,87 +4,78 @@ declare(strict_types=1);
 
 namespace NDCore\Support;
 
-final class Str
-{
-    private function __construct()
-    {
-    }
+final class Str {
 
-    public static function slug(string $value, string $separator = '-'): string
-    {
-        $value = self::asciiTransliterate($value);
-        $value = strtolower($value);
-        $value = (string) preg_replace('/[^a-z0-9]+/', $separator, $value);
+	private function __construct() {
+	}
 
-        return trim($value, $separator);
-    }
+	public static function slug( string $value, string $separator = '-' ): string {
+		$value = self::asciiTransliterate( $value );
+		$value = strtolower( $value );
+		$value = (string) preg_replace( '/[^a-z0-9]+/', $separator, $value );
 
-    public static function camel(string $value): string
-    {
-        $studly = self::studly($value);
+		return trim( $value, $separator );
+	}
 
-        return lcfirst($studly);
-    }
+	public static function camel( string $value ): string {
+		$studly = self::studly( $value );
 
-    public static function studly(string $value): string
-    {
-        $value = str_replace(['-', '_'], ' ', $value);
-        $value = ucwords($value);
+		return lcfirst( $studly );
+	}
 
-        return str_replace(' ', '', $value);
-    }
+	public static function studly( string $value ): string {
+		$value = str_replace( array( '-', '_' ), ' ', $value );
+		$value = ucwords( $value );
 
-    public static function snake(string $value, string $delimiter = '_'): string
-    {
-        if (! ctype_lower($value)) {
-            $value = (string) preg_replace('/\s+/u', '', ucwords($value));
-            $value = (string) preg_replace('/(.)(?=[A-Z])/u', '$1' . $delimiter, $value);
-        }
+		return str_replace( ' ', '', $value );
+	}
 
-        return strtolower($value);
-    }
+	public static function snake( string $value, string $delimiter = '_' ): string {
+		if ( ! ctype_lower( $value ) ) {
+			$value = (string) preg_replace( '/\s+/u', '', ucwords( $value ) );
+			$value = (string) preg_replace( '/(.)(?=[A-Z])/u', '$1' . $delimiter, $value );
+		}
 
-    public static function limit(string $value, int $limit = 100, string $end = '…'): string
-    {
-        if (mb_strwidth($value, 'UTF-8') <= $limit) {
-            return $value;
-        }
+		return strtolower( $value );
+	}
 
-        return rtrim(mb_strimwidth($value, 0, $limit, '', 'UTF-8')) . $end;
-    }
+	public static function limit( string $value, int $limit = 100, string $end = '…' ): string {
+		if ( mb_strwidth( $value, 'UTF-8' ) <= $limit ) {
+			return $value;
+		}
 
-    public static function random(int $length = 16): string
-    {
-        return substr(bin2hex(random_bytes((int) ceil($length / 2))), 0, $length);
-    }
+		return rtrim( mb_strimwidth( $value, 0, $limit, '', 'UTF-8' ) ) . $end;
+	}
 
-    public static function startsWith(string $haystack, string $needle): bool
-    {
-        return $needle !== '' && str_starts_with($haystack, $needle);
-    }
+	public static function random( int $length = 16 ): string {
+		$byteCount = max( 1, (int) ceil( $length / 2 ) );
 
-    public static function endsWith(string $haystack, string $needle): bool
-    {
-        return $needle !== '' && str_ends_with($haystack, $needle);
-    }
+		return substr( bin2hex( random_bytes( $byteCount ) ), 0, $length );
+	}
 
-    public static function contains(string $haystack, string $needle): bool
-    {
-        return $needle !== '' && str_contains($haystack, $needle);
-    }
+	public static function startsWith( string $haystack, string $needle ): bool {
+		return $needle !== '' && str_starts_with( $haystack, $needle );
+	}
 
-    private static function asciiTransliterate(string $value): string
-    {
-        if (function_exists('remove_accents')) {
-            return remove_accents($value);
-        }
+	public static function endsWith( string $haystack, string $needle ): bool {
+		return $needle !== '' && str_ends_with( $haystack, $needle );
+	}
 
-        if (! function_exists('iconv')) {
-            return $value;
-        }
+	public static function contains( string $haystack, string $needle ): bool {
+		return $needle !== '' && str_contains( $haystack, $needle );
+	}
 
-        $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT', $value);
+	private static function asciiTransliterate( string $value ): string {
+		if ( function_exists( 'remove_accents' ) ) {
+			return remove_accents( $value );
+		}
 
-        return $transliterated !== false ? $transliterated : $value;
-    }
+		if ( ! function_exists( 'iconv' ) ) {
+			return $value;
+		}
+
+		$transliterated = iconv( 'UTF-8', 'ASCII//TRANSLIT', $value );
+
+		return $transliterated !== false ? $transliterated : $value;
+	}
 }

@@ -5,7 +5,20 @@ parameters:
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: true
     checkGenericClassInNonGenericObjectType: true
+    ignoreErrors:
+        -
+            # Coaccionar filas de $wpdb (CampaignRepository, StatsRepository,
+            # AdRenderer) y valores de get_query_var() (ClickRedirectController)
+            # con (int)/(string)/(float) es el idiomatismo estándar de esta
+            # base de código; ver la misma justificación en
+            # packages/nd-core/phpstan.neon.dist.
+            message: '#Cannot cast mixed to (int|float|string)#'
+            paths:
+                - src/Http/ClickRedirectController.php
+                - src/Rendering/AdRenderer.php
+                - src/Repository/CampaignRepository.php
+                - src/Stats/StatsRepository.php
 
-includes:
-    - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
+# szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen
+# automáticamente vía phpstan/extension-installer (composer.json); incluirlos
+# también aquí los registra dos veces y phpstan lo rechaza.

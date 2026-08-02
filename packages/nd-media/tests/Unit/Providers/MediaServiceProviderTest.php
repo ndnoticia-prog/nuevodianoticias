@@ -12,19 +12,18 @@ use NDMedia\Podcast\PodcastFeedEnhancer;
 use NDMedia\Providers\MediaServiceProvider;
 use PHPUnit\Framework\TestCase;
 
-final class MediaServiceProviderTest extends TestCase
-{
-    public function test_register_binds_all_services_and_loads_config(): void
-    {
-        $container = new Container();
-        $config = new Config();
-        $container->instance(Config::class, $config);
+final class MediaServiceProviderTest extends TestCase {
 
-        (new MediaServiceProvider($container))->register();
+	public function test_register_binds_all_services_and_loads_config(): void {
+		$container = new Container();
+		$config    = new Config();
+		$container->instance( Config::class, $config );
 
-        self::assertInstanceOf(ModernFormatConverter::class, $container->make(ModernFormatConverter::class));
-        self::assertInstanceOf(CdnUrlRewriter::class, $container->make(CdnUrlRewriter::class));
-        self::assertInstanceOf(PodcastFeedEnhancer::class, $container->make(PodcastFeedEnhancer::class));
-        self::assertSame('webp', $config->get('media.modern_format'));
-    }
+		( new MediaServiceProvider( $container ) )->register();
+
+		self::assertInstanceOf( ModernFormatConverter::class, $container->make( ModernFormatConverter::class ) );
+		self::assertInstanceOf( CdnUrlRewriter::class, $container->make( CdnUrlRewriter::class ) );
+		self::assertInstanceOf( PodcastFeedEnhancer::class, $container->make( PodcastFeedEnhancer::class ) );
+		self::assertSame( 'webp', $config->get( 'media.modern_format' ) );
+	}
 }

@@ -6,103 +6,99 @@ namespace NDCore\Support;
 
 use stdClass;
 
-final class Arr
-{
-    private function __construct()
-    {
-    }
+final class Arr {
 
-    /**
-     * @param array<array-key, mixed> $array
-     */
-    public static function get(array $array, string $key, mixed $default = null): mixed
-    {
-        if (array_key_exists($key, $array)) {
-            return $array[$key];
-        }
+	private function __construct() {
+	}
 
-        $value = $array;
+	/**
+	 * @param array<array-key, mixed> $array
+	 */
+	public static function get( array $array, string $key, mixed $default = null ): mixed {
+		if ( array_key_exists( $key, $array ) ) {
+			return $array[ $key ];
+		}
 
-        foreach (explode('.', $key) as $segment) {
-            if (! is_array($value) || ! array_key_exists($segment, $value)) {
-                return $default;
-            }
+		$value = $array;
 
-            $value = $value[$segment];
-        }
+		foreach ( explode( '.', $key ) as $segment ) {
+			if ( ! is_array( $value ) || ! array_key_exists( $segment, $value ) ) {
+				return $default;
+			}
 
-        return $value;
-    }
+			$value = $value[ $segment ];
+		}
 
-    /**
-     * @param array<array-key, mixed> $array
-     *
-     * @return array<array-key, mixed>
-     */
-    public static function set(array $array, string $key, mixed $value): array
-    {
-        $segments = explode('.', $key);
-        $lastSegment = array_pop($segments);
-        $target = &$array;
+		return $value;
+	}
 
-        foreach ($segments as $segment) {
-            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
-                $target[$segment] = [];
-            }
+	/**
+	 * @param array<array-key, mixed> $array
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	public static function set( array $array, string $key, mixed $value ): array {
+		$segments    = explode( '.', $key );
+		$lastSegment = array_pop( $segments );
+		$target      = &$array;
 
-            $target = &$target[$segment];
-        }
+		foreach ( $segments as $segment ) {
+			if ( ! isset( $target[ $segment ] ) || ! is_array( $target[ $segment ] ) ) {
+				$target[ $segment ] = array();
+			}
 
-        $target[$lastSegment] = $value;
+			$target = &$target[ $segment ];
+		}
 
-        return $array;
-    }
+		$target[ $lastSegment ] = $value;
 
-    /**
-     * @param array<array-key, mixed> $array
-     */
-    public static function has(array $array, string $key): bool
-    {
-        $sentinel = new stdClass();
+		return $array;
+	}
 
-        return self::get($array, $key, $sentinel) !== $sentinel;
-    }
+	/**
+	 * @param array<array-key, mixed> $array
+	 */
+	public static function has( array $array, string $key ): bool {
+		$sentinel = new stdClass();
 
-    /**
-     * @param array<string, mixed> $array
-     * @param list<string> $keys
-     *
-     * @return array<string, mixed>
-     */
-    public static function only(array $array, array $keys): array
-    {
-        return array_intersect_key($array, array_flip($keys));
-    }
+		return self::get( $array, $key, $sentinel ) !== $sentinel;
+	}
 
-    /**
-     * @param array<string, mixed> $array
-     * @param list<string> $keys
-     *
-     * @return array<string, mixed>
-     */
-    public static function except(array $array, array $keys): array
-    {
-        return array_diff_key($array, array_flip($keys));
-    }
+	/**
+	 * @param array<string, mixed> $array
+	 * @param list<string> $keys
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function only( array $array, array $keys ): array {
+		return array_intersect_key( $array, array_flip( $keys ) );
+	}
 
-    /**
-     * @param array<array-key, mixed> $array
-     *
-     * @return array<int, mixed>
-     */
-    public static function flatten(array $array): array
-    {
-        $result = [];
+	/**
+	 * @param array<string, mixed> $array
+	 * @param list<string> $keys
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function except( array $array, array $keys ): array {
+		return array_diff_key( $array, array_flip( $keys ) );
+	}
 
-        array_walk_recursive($array, function (mixed $value) use (&$result): void {
-            $result[] = $value;
-        });
+	/**
+	 * @param array<array-key, mixed> $array
+	 *
+	 * @return array<int, mixed>
+	 */
+	public static function flatten( array $array ): array {
+		$result = array();
 
-        return $result;
-    }
+		array_walk_recursive(
+			$array,
+			function ( mixed $value ) use ( &$result ): void {
+				$result[] = $value;
+			}
+		);
+
+		return $result;
+	}
 }

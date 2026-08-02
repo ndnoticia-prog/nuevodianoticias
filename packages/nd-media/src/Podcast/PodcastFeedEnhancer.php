@@ -12,49 +12,45 @@ use NDCore\Config\Config;
  * tengan un audio asociado (meta `_nd_podcast_audio_url`), sin necesidad de
  * un generador de feeds propio.
  */
-final class PodcastFeedEnhancer
-{
-    public function __construct(private readonly Config $config)
-    {
-    }
+final class PodcastFeedEnhancer {
 
-    public function addNamespace(): void
-    {
-        echo ' xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"' . "\n";
-    }
+	public function __construct( private readonly Config $config ) {
+	}
 
-    public function addEnclosure(): void
-    {
-        $postId = get_the_ID();
+	public function addNamespace(): void {
+		echo ' xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"' . "\n";
+	}
 
-        if ($postId === false) {
-            return;
-        }
+	public function addEnclosure(): void {
+		$postId = get_the_ID();
 
-        $audioUrl = get_post_meta($postId, $this->audioMetaKey(), true);
+		if ( $postId === false ) {
+			return;
+		}
 
-        if (! is_string($audioUrl) || $audioUrl === '') {
-            return;
-        }
+		$audioUrl = get_post_meta( $postId, $this->audioMetaKey(), true );
 
-        $length = (int) get_post_meta($postId, $this->audioLengthMetaKey(), true);
+		if ( ! is_string( $audioUrl ) || $audioUrl === '' ) {
+			return;
+		}
 
-        printf(
-            '<enclosure url="%s" length="%d" type="audio/mpeg" />' . "\n",
-            esc_url($audioUrl),
-            $length
-        );
+		$length = (int) get_post_meta( $postId, $this->audioLengthMetaKey(), true );
 
-        printf('<itunes:title>%s</itunes:title>' . "\n", esc_html(get_the_title($postId)));
-    }
+		printf(
+			'<enclosure url="%s" length="%d" type="audio/mpeg" />' . "\n",
+			esc_url( $audioUrl ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $length ya es un (int) y se formatea con %d; no puede contener marcado.
+			$length
+		);
 
-    private function audioMetaKey(): string
-    {
-        return (string) $this->config->get('media.podcast.audio_meta_key', '_nd_podcast_audio_url');
-    }
+		printf( '<itunes:title>%s</itunes:title>' . "\n", esc_html( get_the_title( $postId ) ) );
+	}
 
-    private function audioLengthMetaKey(): string
-    {
-        return (string) $this->config->get('media.podcast.audio_length_meta_key', '_nd_podcast_audio_length');
-    }
+	private function audioMetaKey(): string {
+		return (string) $this->config->get( 'media.podcast.audio_meta_key', '_nd_podcast_audio_url' );
+	}
+
+	private function audioLengthMetaKey(): string {
+		return (string) $this->config->get( 'media.podcast.audio_length_meta_key', '_nd_podcast_audio_length' );
+	}
 }

@@ -9,142 +9,127 @@ use NDCore\Container\Exceptions\ContainerException;
 use NDCore\Container\Exceptions\UnresolvableParameterException;
 use PHPUnit\Framework\TestCase;
 
-interface ContainerTestLoggerInterface
-{
-    public function log(string $message): string;
+interface ContainerTestLoggerInterface {
+
+	public function log( string $message ): string;
 }
 
-final class ContainerTestArrayLogger implements ContainerTestLoggerInterface
-{
-    public function log(string $message): string
-    {
-        return $message;
-    }
+final class ContainerTestArrayLogger implements ContainerTestLoggerInterface {
+
+	public function log( string $message ): string {
+		return $message;
+	}
 }
 
-final class ContainerTestService
-{
-    public function __construct(public readonly ContainerTestLoggerInterface $logger)
-    {
-    }
+final class ContainerTestService {
+
+	public function __construct( public readonly ContainerTestLoggerInterface $logger ) {
+	}
 }
 
-final class ContainerTestUnresolvable
-{
-    public function __construct(public readonly string $missing)
-    {
-    }
+final class ContainerTestUnresolvable {
+
+	public function __construct( public readonly string $missing ) {
+	}
 }
 
-final class ContainerTestCircularA
-{
-    public function __construct(public readonly ContainerTestCircularB $b)
-    {
-    }
+final class ContainerTestCircularA {
+
+	public function __construct( public readonly ContainerTestCircularB $b ) {
+	}
 }
 
-final class ContainerTestCircularB
-{
-    public function __construct(public readonly ContainerTestCircularA $a)
-    {
-    }
+final class ContainerTestCircularB {
+
+	public function __construct( public readonly ContainerTestCircularA $a ) {
+	}
 }
 
-final class ContainerTestOptionalDependency
-{
-    public function __construct(public readonly ?ContainerTestLoggerInterface $logger = null)
-    {
-    }
+final class ContainerTestOptionalDependency {
+
+	public function __construct( public readonly ?ContainerTestLoggerInterface $logger = null ) {
+	}
 }
 
-final class ContainerTest extends TestCase
-{
-    public function test_bind_resolves_via_closure(): void
-    {
-        $container = new Container();
-        $container->bind('answer', static fn (): int => 42);
+final class ContainerTest extends TestCase {
 
-        self::assertSame(42, $container->make('answer'));
-    }
+	public function test_bind_resolves_via_closure(): void {
+		$container = new Container();
+		$container->bind( 'answer', static fn (): int => 42 );
 
-    public function test_singleton_returns_same_instance(): void
-    {
-        $container = new Container();
-        $container->singleton(ContainerTestArrayLogger::class);
+		self::assertSame( 42, $container->make( 'answer' ) );
+	}
 
-        $first = $container->make(ContainerTestArrayLogger::class);
-        $second = $container->make(ContainerTestArrayLogger::class);
+	public function test_singleton_returns_same_instance(): void {
+		$container = new Container();
+		$container->singleton( ContainerTestArrayLogger::class );
 
-        self::assertSame($first, $second);
-    }
+		$first  = $container->make( ContainerTestArrayLogger::class );
+		$second = $container->make( ContainerTestArrayLogger::class );
 
-    public function test_bind_without_shared_creates_new_instances(): void
-    {
-        $container = new Container();
-        $container->bind(ContainerTestArrayLogger::class);
+		self::assertSame( $first, $second );
+	}
 
-        $first = $container->make(ContainerTestArrayLogger::class);
-        $second = $container->make(ContainerTestArrayLogger::class);
+	public function test_bind_without_shared_creates_new_instances(): void {
+		$container = new Container();
+		$container->bind( ContainerTestArrayLogger::class );
 
-        self::assertNotSame($first, $second);
-    }
+		$first  = $container->make( ContainerTestArrayLogger::class );
+		$second = $container->make( ContainerTestArrayLogger::class );
 
-    public function test_instance_registers_prebuilt_object(): void
-    {
-        $container = new Container();
-        $logger = new ContainerTestArrayLogger();
+		self::assertNotSame( $first, $second );
+	}
 
-        $container->instance(ContainerTestLoggerInterface::class, $logger);
+	public function test_instance_registers_prebuilt_object(): void {
+		$container = new Container();
+		$logger    = new ContainerTestArrayLogger();
 
-        self::assertSame($logger, $container->get(ContainerTestLoggerInterface::class));
-    }
+		$container->instance( ContainerTestLoggerInterface::class, $logger );
 
-    public function test_autowiring_resolves_bound_interface_dependency(): void
-    {
-        $container = new Container();
-        $container->bind(ContainerTestLoggerInterface::class, ContainerTestArrayLogger::class);
+		self::assertSame( $logger, $container->get( ContainerTestLoggerInterface::class ) );
+	}
 
-        $service = $container->make(ContainerTestService::class);
+	public function test_autowiring_resolves_bound_interface_dependency(): void {
+		$container = new Container();
+		$container->bind( ContainerTestLoggerInterface::class, ContainerTestArrayLogger::class );
 
-        self::assertInstanceOf(ContainerTestService::class, $service);
-        self::assertInstanceOf(ContainerTestArrayLogger::class, $service->logger);
-    }
+		$service = $container->make( ContainerTestService::class );
 
-    public function test_has_reflects_bindings_and_instances(): void
-    {
-        $container = new Container();
+		self::assertInstanceOf( ContainerTestService::class, $service );
+		self::assertInstanceOf( ContainerTestArrayLogger::class, $service->logger );
+	}
 
-        self::assertFalse($container->has('nonexistent-abstract'));
+	public function test_has_reflects_bindings_and_instances(): void {
+		$container = new Container();
 
-        $container->bind('nonexistent-abstract', static fn (): int => 1);
+		self::assertFalse( $container->has( 'nonexistent-abstract' ) );
 
-        self::assertTrue($container->has('nonexistent-abstract'));
-    }
+		$container->bind( 'nonexistent-abstract', static fn (): int => 1 );
 
-    public function test_unresolvable_scalar_parameter_throws(): void
-    {
-        $container = new Container();
+		self::assertTrue( $container->has( 'nonexistent-abstract' ) );
+	}
 
-        $this->expectException(UnresolvableParameterException::class);
+	public function test_unresolvable_scalar_parameter_throws(): void {
+		$container = new Container();
 
-        $container->make(ContainerTestUnresolvable::class);
-    }
+		$this->expectException( UnresolvableParameterException::class );
 
-    public function test_circular_dependency_throws_container_exception(): void
-    {
-        $container = new Container();
+		$container->make( ContainerTestUnresolvable::class );
+	}
 
-        $this->expectException(ContainerException::class);
+	public function test_circular_dependency_throws_container_exception(): void {
+		$container = new Container();
 
-        $container->make(ContainerTestCircularA::class);
-    }
+		$this->expectException( ContainerException::class );
 
-    public function test_optional_class_dependency_falls_back_to_default(): void
-    {
-        $container = new Container();
+		$container->make( ContainerTestCircularA::class );
+	}
 
-        $resolved = $container->make(ContainerTestOptionalDependency::class);
+	public function test_optional_class_dependency_falls_back_to_default(): void {
+		$container = new Container();
 
-        self::assertNull($resolved->logger);
-    }
+		$resolved = $container->make( ContainerTestOptionalDependency::class );
+
+		self::assertNull( $resolved->logger );
+	}
 }

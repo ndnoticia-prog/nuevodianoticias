@@ -15,7 +15,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] Suite de pruebas unitarias PHPUnit (Brain Monkey) para `Container`, `Config`, `Support\{Str,Arr,Collection}`, `EventDispatcher`, `HookManager`, `SettingsRepository`, `Security\Encryption`.
 - [ ] Pruebas de integración con WordPress real (`wp-env` + suite oficial de WP) para `DatabaseManager`, `Migrator` y `QueueManager`: requieren un `$wpdb`/MySQL reales y no son cubribles de forma fiable solo con Brain Monkey.
 - [ ] `nd-core-0.1.0-alpha.1.zip` generado por `tools/build/package.sh` e instalable en WordPress sin errores fatales.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde (pendiente de que PHP/Composer estén disponibles en el entorno de desarrollo).
+- [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde (0 errores PHPCS/PHPStan, 52 pruebas PHPUnit).
 
 ## v0.1.0-alpha.2 — Tema base y builder mínimo
 
@@ -28,7 +28,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] Suite de pruebas unitarias PHPUnit (Brain Monkey) para `nd-builder` (`Block`, `BlockRegistry`, `Renderer`, `TemplateBlockRenderer`, `BuilderServiceProvider`) y para `nd-theme` (`ThemeServiceProvider`).
 - [ ] Pruebas de integración con WordPress real para `HomeContentProvider`: depende de `WP_Query` contra una base de datos real: no es cubrible de forma fiable solo con Brain Monkey (mismo caso que `DatabaseManager`/`Migrator` en alpha.1).
 - [ ] `nd-theme-0.1.0-alpha.1.zip` instalable, generado por `tools/build/package.sh`.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-builder` y `nd-theme` (pendiente del mismo entorno de desarrollo que alpha.1).
+- [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-builder` y `nd-theme`; `npm install && npm run build` genera `dist/app.css`/`dist/app.js` correctamente.
 
 ## v0.1.0-alpha.3 — SEO y multimedia
 
@@ -45,7 +45,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] `nd-discover`: tamaño de imagen destacada `nd-discover-featured` (1200×675, ≥1200px de ancho requerido por Discover), registrado en `after_setup_theme` y consumido por `nd-seo`/`nd-theme` como contrato de nombre de tamaño (sin acoplar esos paquetes a nd-discover).
 - [x] `nd-core`: `nd-media` y `nd-discover` añadidos a `require` (empaquetados) y sus providers registrados automáticamente en `Application`.
 - [x] Suite de pruebas PHPUnit (Brain Monkey) para `nd-media` (incluyendo `function_exists('imagewebp'/'imageavif')` interceptado para no depender del GD real de la máquina de CI) y `nd-discover`.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-seo`, `nd-media` y `nd-discover` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
+- [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-seo`, `nd-media` y `nd-discover`.
 
 ## v0.1.0-alpha.4 — Editorial y publicidad
 
@@ -56,7 +56,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query`/`$wpdb` reales.
 - [ ] Sin interfaz visual de administración (calendario arrastrable, gestor de campañas, panel de analítica): esta versión entrega la capa de datos y REST; la UI queda para una versión posterior.
 - [ ] Pruebas de integración con WordPress real para todo lo que depende de `DatabaseManager`/`WP_Query`/`WP_Post` (`EditorialNoteRepository`, `CalendarRepository`, `CampaignRepository`, `StatsRecorder`/`StatsRepository`, `ClickRedirectController`, `PageviewRecorder`, `ImpressionRecorder`, `AnalyticsRepository`): mismo caso ya documentado para `DatabaseManager`/`Migrator` en alpha.1.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-workflow`, `nd-ads` y `nd-analytics` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
+- [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-workflow`, `nd-ads` y `nd-analytics`.
 
 ## v0.1.0-alpha.5 — IA, búsqueda y caché (cierra la lista completa de paquetes)
 
@@ -67,7 +67,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query`/`$wpdb` reales — en nd-ai, al no depender de base de datos, la cobertura es más completa que en paquetes anteriores (`AiManager`, `ContentAssistant`, `OpenAiProvider`, `ApiKeyStore`, wiring completo del provider).
 - [ ] Sin interfaz visual (gestor de claves de IA, panel de resultados de búsqueda, purga manual de caché): esta versión entrega la capa de datos/lógica y REST donde aplica.
 - [ ] nd-search no tiene ninguna pieza comprobable sin WordPress real (todo pasa por `WP_Post`/`WP_Query`/`$wpdb`): necesita pruebas de integración completas.
-- [ ] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-ai`, `nd-search` y `nd-cache` (pendiente del mismo entorno de desarrollo que el resto de paquetes).
+- [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-ai`, `nd-search` y `nd-cache`.
 
 Con esta versión quedan implementados los 13 paquetes de la arquitectura original (`nd-core`, `nd-builder`, `nd-theme`, `nd-api` pendiente — ver nota abajo —, `nd-seo`, `nd-ads`, `nd-media`, `nd-workflow`, `nd-analytics`, `nd-ai`, `nd-cache`, `nd-discover`, `nd-search`). `nd-api` no se ha creado como paquete separado: su responsabilidad (superficie REST pública) vive distribuida en cada paquete a través de `NDCore\RestApi\Contracts\RegistersRoutes` y el filtro `nd_core/rest_controllers`, centralizados por `RestApiServiceProvider` de nd-core — crear un paquete `nd-api` vacío solo para "existir" habría sido un contenedor sin responsabilidad propia.
 

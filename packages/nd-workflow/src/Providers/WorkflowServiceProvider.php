@@ -15,40 +15,45 @@ use NDWorkflow\RestApi\AssignmentController;
 use NDWorkflow\RestApi\CalendarController;
 use NDWorkflow\RestApi\NotesController;
 
-final class WorkflowServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->container->singleton(EditorialNoteRepository::class);
-        $this->container->singleton(AssignmentManager::class);
-        $this->container->singleton(CalendarRepository::class);
-        $this->container->singleton(EditorialStatuses::class);
+final class WorkflowServiceProvider extends ServiceProvider {
 
-        $this->container->singleton(NotesController::class);
-        $this->container->singleton(AssignmentController::class);
-        $this->container->singleton(CalendarController::class);
-    }
+	public function register(): void {
+		$this->container->singleton( EditorialNoteRepository::class );
+		$this->container->singleton( AssignmentManager::class );
+		$this->container->singleton( CalendarRepository::class );
+		$this->container->singleton( EditorialStatuses::class );
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+		$this->container->singleton( NotesController::class );
+		$this->container->singleton( AssignmentController::class );
+		$this->container->singleton( CalendarController::class );
+	}
 
-        $hooks->addAction('init', function (): void {
-            $this->container->make(EditorialStatuses::class)->register();
-        });
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        $hooks->addFilter('nd_core/rest_controllers', static function (array $controllers): array {
-            $controllers[] = NotesController::class;
-            $controllers[] = AssignmentController::class;
-            $controllers[] = CalendarController::class;
+		$hooks->addAction(
+			'init',
+			function (): void {
+				/** @var EditorialStatuses $editorialStatuses */
+				$editorialStatuses = $this->container->make( EditorialStatuses::class );
+				$editorialStatuses->register();
+			}
+		);
 
-            return $controllers;
-        });
-    }
+		$hooks->addFilter(
+			'nd_core/rest_controllers',
+			static function ( array $controllers ): array {
+				$controllers[] = NotesController::class;
+				$controllers[] = AssignmentController::class;
+				$controllers[] = CalendarController::class;
 
-    public function migrations(): array
-    {
-        return [CreateEditorialNotesTable::class];
-    }
+				return $controllers;
+			}
+		);
+	}
+
+	public function migrations(): array {
+		return array( CreateEditorialNotesTable::class );
+	}
 }

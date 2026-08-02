@@ -7,36 +7,34 @@ namespace NDSeo\Meta;
 use NDCore\Config\Config;
 use NDSeo\Context\SeoContext;
 
-final class TwitterCardBuilder
-{
-    public function __construct(private readonly Config $config)
-    {
-    }
+final class TwitterCardBuilder {
 
-    /**
-     * @return array<string, string>
-     */
-    public function build(SeoContext $context): array
-    {
-        $tags = [
-            'twitter:card' => $context->imageUrl !== null ? 'summary_large_image' : 'summary',
-            'twitter:title' => $context->title,
-        ];
+	public function __construct( private readonly Config $config ) {
+	}
 
-        if ($context->description !== '') {
-            $tags['twitter:description'] = $context->description;
-        }
+	/**
+	 * @return array<string, string>
+	 */
+	public function build( SeoContext $context ): array {
+		$tags = array(
+			'twitter:card'  => $context->imageUrl !== null ? 'summary_large_image' : 'summary',
+			'twitter:title' => $context->title,
+		);
 
-        if ($context->imageUrl !== null) {
-            $tags['twitter:image'] = $context->imageUrl;
-        }
+		if ( $context->description !== '' ) {
+			$tags['twitter:description'] = $context->description;
+		}
 
-        $site = $this->config->get('seo.social.twitter_site');
+		if ( $context->imageUrl !== null ) {
+			$tags['twitter:image'] = $context->imageUrl;
+		}
 
-        if (is_string($site) && $site !== '') {
-            $tags['twitter:site'] = $site;
-        }
+		$site = $this->config->get( 'seo.social.twitter_site' );
 
-        return $tags;
-    }
+		if ( is_string( $site ) && $site !== '' ) {
+			$tags['twitter:site'] = $site;
+		}
+
+		return $tags;
+	}
 }

@@ -13,139 +13,139 @@ use NDCore\Http\Client;
  * WordPress.org, así que consulta directamente los "Releases" de un
  * repositorio de GitHub para notificar nuevas versiones en el admin.
  */
-final class UpdateChecker
-{
-    private const CACHE_KEY = 'updater/latest_release';
-    private const CACHE_TTL_SECONDS = 21600;
+final class UpdateChecker {
 
-    public function __construct(
-        private readonly Client $http,
-        private readonly CacheManager $cache,
-        private readonly string $pluginFile,
-        private readonly string $currentVersion,
-        private readonly string $repository,
-        private readonly string $releaseAssetName = 'nd-core.zip',
-    ) {
-    }
+	private const CACHE_KEY         = 'updater/latest_release';
+	private const CACHE_TTL_SECONDS = 21600;
 
-    public function register(HookManager $hooks): void
-    {
-        $hooks->addFilter('pre_set_site_transient_update_plugins', [$this, 'injectUpdate']);
-        $hooks->addFilter('plugins_api', [$this, 'pluginInformation'], 10, 3);
-    }
+	public function __construct(
+		private readonly Client $http,
+		private readonly CacheManager $cache,
+		private readonly string $pluginFile,
+		private readonly string $currentVersion,
+		private readonly string $repository,
+		private readonly string $releaseAssetName = 'nd-core.zip',
+	) {
+	}
 
-    public function injectUpdate(mixed $transient): mixed
-    {
-        if (! is_object($transient)) {
-            return $transient;
-        }
+	public function register( HookManager $hooks ): void {
+		$hooks->addFilter( 'pre_set_site_transient_update_plugins', array( $this, 'injectUpdate' ) );
+		$hooks->addFilter( 'plugins_api', array( $this, 'pluginInformation' ), 10, 3 );
+	}
 
-        $release = $this->latestRelease();
+	public function injectUpdate( mixed $transient ): mixed {
+		if ( ! is_object( $transient ) ) {
+			return $transient;
+		}
 
-        if ($release === null || version_compare($release['version'], $this->currentVersion, '<=')) {
-            return $transient;
-        }
+		$release = $this->latestRelease();
 
-        $pluginBasename = plugin_basename($this->pluginFile);
+		if ( $release === null || version_compare( $release['version'], $this->currentVersion, '<=' ) ) {
+			return $transient;
+		}
 
-        if (! isset($transient->response) || ! is_array($transient->response)) {
-            $transient->response = [];
-        }
+		$pluginBasename = plugin_basename( $this->pluginFile );
 
-        $transient->response[$pluginBasename] = (object) [
-            'slug' => dirname($pluginBasename),
-            'plugin' => $pluginBasename,
-            'new_version' => $release['version'],
-            'url' => $release['url'],
-            'package' => $release['package'],
-        ];
+		if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+			// $transient es el objeto dinámico (stdClass) que WordPress usa
+			// para el transient "update_plugins": no tiene una clase propia
+			// con propiedades declaradas, así que asignarle ->response es el
+			// patrón esperado, no un error.
+			// @phpstan-ignore property.notFound
+			$transient->response = array();
+		}
 
-        return $transient;
-    }
+		$transient->response[ $pluginBasename ] = (object) array(
+			'slug'        => dirname( $pluginBasename ),
+			'plugin'      => $pluginBasename,
+			'new_version' => $release['version'],
+			'url'         => $release['url'],
+			'package'     => $release['package'],
+		);
 
-    public function pluginInformation(mixed $result, string $action, object $args): mixed
-    {
-        $slug = dirname(plugin_basename($this->pluginFile));
+		return $transient;
+	}
 
-        if ($action !== 'plugin_information' || ($args->slug ?? null) !== $slug) {
-            return $result;
-        }
+	public function pluginInformation( mixed $result, string $action, object $args ): mixed {
+		$slug = dirname( plugin_basename( $this->pluginFile ) );
 
-        $release = $this->latestRelease();
+		if ( $action !== 'plugin_information' || ( $args->slug ?? null ) !== $slug ) {
+			return $result;
+		}
 
-        if ($release === null) {
-            return $result;
-        }
+		$release = $this->latestRelease();
 
-        return (object) [
-            'name' => 'ND Core',
-            'slug' => $slug,
-            'version' => $release['version'],
-            'download_link' => $release['package'],
-            'homepage' => $release['url'],
-        ];
-    }
+		if ( $release === null ) {
+			return $result;
+		}
 
-    /**
-     * @return array{version: string, url: string, package: string}|null
-     */
-    private function latestRelease(): ?array
-    {
-        /** @var array{version: string, url: string, package: string}|null $release */
-        $release = $this->cache->remember(
-            self::CACHE_KEY,
-            fn (): ?array => $this->fetchLatestRelease(),
-            self::CACHE_TTL_SECONDS
-        );
+		return (object) array(
+			'name'          => 'ND Core',
+			'slug'          => $slug,
+			'version'       => $release['version'],
+			'download_link' => $release['package'],
+			'homepage'      => $release['url'],
+		);
+	}
 
-        return $release;
-    }
+	/**
+	 * @return array{version: string, url: string, package: string}|null
+	 */
+	private function latestRelease(): ?array {
+		/** @var array{version: string, url: string, package: string}|null $release */
+		$release = $this->cache->remember(
+			self::CACHE_KEY,
+			fn (): ?array => $this->fetchLatestRelease(),
+			self::CACHE_TTL_SECONDS
+		);
 
-    /**
-     * @return array{version: string, url: string, package: string}|null
-     */
-    private function fetchLatestRelease(): ?array
-    {
-        $response = $this->http->get(
-            sprintf('https://api.github.com/repos/%s/releases/latest', $this->repository),
-            [],
-            [
-                'Accept' => 'application/vnd.github+json',
-                'User-Agent' => 'ND-Platform-Update-Checker',
-            ]
-        );
+		return $release;
+	}
 
-        if ($response->failed()) {
-            return null;
-        }
+	/**
+	 * @return array{version: string, url: string, package: string}|null
+	 */
+	private function fetchLatestRelease(): ?array {
+		$response = $this->http->get(
+			sprintf( 'https://api.github.com/repos/%s/releases/latest', $this->repository ),
+			array(),
+			array(
+				'Accept'     => 'application/vnd.github+json',
+				'User-Agent' => 'ND-Platform-Update-Checker',
+			)
+		);
 
-        $data = $response->json();
-        $tagName = $data['tag_name'] ?? null;
-        $version = is_string($tagName) ? ltrim($tagName, 'v') : null;
+		if ( $response->failed() ) {
+			return null;
+		}
 
-        if ($version === null) {
-            return null;
-        }
+		$data    = $response->json();
+		$tagName = $data['tag_name'] ?? null;
+		$version = is_string( $tagName ) ? ltrim( $tagName, 'v' ) : null;
 
-        $assets = is_array($data['assets'] ?? null) ? $data['assets'] : [];
-        $package = null;
+		if ( $version === null ) {
+			return null;
+		}
 
-        foreach ($assets as $asset) {
-            if (is_array($asset) && ($asset['name'] ?? null) === $this->releaseAssetName) {
-                $package = $asset['browser_download_url'] ?? null;
+		$assets  = is_array( $data['assets'] ?? null ) ? $data['assets'] : array();
+		$package = null;
 
-                break;
-            }
-        }
+		foreach ( $assets as $asset ) {
+			if ( is_array( $asset ) && ( $asset['name'] ?? null ) === $this->releaseAssetName ) {
+				$package = $asset['browser_download_url'] ?? null;
 
-        if (! is_string($package)) {
-            return null;
-        }
+				break;
+			}
+		}
 
-        return [
-            'version' => $version,
-            'url' => is_string($data['html_url'] ?? null) ? $data['html_url'] : '',
-            'package' => $package,
-        ];
-    }
+		if ( ! is_string( $package ) ) {
+			return null;
+		}
+
+		return array(
+			'version' => $version,
+			'url'     => is_string( $data['html_url'] ?? null ) ? $data['html_url'] : '',
+			'package' => $package,
+		);
+	}
 }

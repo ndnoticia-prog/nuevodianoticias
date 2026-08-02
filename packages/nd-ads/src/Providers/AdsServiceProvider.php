@@ -17,39 +17,41 @@ use NDAds\Stats\StatsRepository;
 use NDCore\Hooks\HookManager;
 use NDCore\Providers\ServiceProvider;
 
-final class AdsServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->container->singleton(CampaignRepository::class);
-        $this->container->singleton(CampaignSelector::class);
-        $this->container->singleton(StatsRecorder::class);
-        $this->container->singleton(StatsRepository::class);
-        $this->container->singleton(AdRenderer::class);
-        $this->container->singleton(AdZoneRenderer::class);
-        $this->container->singleton(ClickRedirectController::class);
-        $this->container->singleton(AdShortcode::class);
-    }
+final class AdsServiceProvider extends ServiceProvider {
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+	public function register(): void {
+		$this->container->singleton( CampaignRepository::class );
+		$this->container->singleton( CampaignSelector::class );
+		$this->container->singleton( StatsRecorder::class );
+		$this->container->singleton( StatsRepository::class );
+		$this->container->singleton( AdRenderer::class );
+		$this->container->singleton( AdZoneRenderer::class );
+		$this->container->singleton( ClickRedirectController::class );
+		$this->container->singleton( AdShortcode::class );
+	}
 
-        $hooks->addAction('init', function (): void {
-            add_shortcode('nd_ad', $this->container->make(AdShortcode::class)->render(...));
-        });
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        /** @var ClickRedirectController $click */
-        $click = $this->container->make(ClickRedirectController::class);
+		$hooks->addAction(
+			'init',
+			function (): void {
+				/** @var AdShortcode $shortcode */
+				$shortcode = $this->container->make( AdShortcode::class );
+				add_shortcode( 'nd_ad', $shortcode->render( ... ) );
+			}
+		);
 
-        $hooks->addAction('init', $click->registerRewriteRule(...));
-        $hooks->addFilter('query_vars', $click->registerQueryVar(...));
-        $hooks->addAction('template_redirect', $click->maybeRedirect(...));
-    }
+		/** @var ClickRedirectController $click */
+		$click = $this->container->make( ClickRedirectController::class );
 
-    public function migrations(): array
-    {
-        return [CreateAdCampaignsTable::class, CreateAdEventsTable::class];
-    }
+		$hooks->addAction( 'init', $click->registerRewriteRule( ... ) );
+		$hooks->addFilter( 'query_vars', $click->registerQueryVar( ... ) );
+		$hooks->addAction( 'template_redirect', $click->maybeRedirect( ... ) );
+	}
+
+	public function migrations(): array {
+		return array( CreateAdCampaignsTable::class, CreateAdEventsTable::class );
+	}
 }

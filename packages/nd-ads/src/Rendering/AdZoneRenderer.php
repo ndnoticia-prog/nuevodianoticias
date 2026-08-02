@@ -12,34 +12,33 @@ use NDAds\Stats\StatsRecorder;
  * único lugar: lo usa tanto el shortcode [nd_ad] como las plantillas de
  * nd-theme que colocan una zona directamente (p. ej. la cabecera).
  */
-final class AdZoneRenderer
-{
-    public function __construct(
-        private readonly CampaignSelector $selector,
-        private readonly AdRenderer $renderer,
-        private readonly StatsRecorder $stats,
-    ) {
-    }
+final class AdZoneRenderer {
 
-    /**
-     * @param list<string> $categorySlugs
-     */
-    public function render(string $zone, array $categorySlugs = []): string
-    {
-        $campaign = $this->selector->selectForZone($zone, $categorySlugs);
+	public function __construct(
+		private readonly CampaignSelector $selector,
+		private readonly AdRenderer $renderer,
+		private readonly StatsRecorder $stats,
+	) {
+	}
 
-        if ($campaign === null) {
-            return '';
-        }
+	/**
+	 * @param list<string> $categorySlugs
+	 */
+	public function render( string $zone, array $categorySlugs = array() ): string {
+		$campaign = $this->selector->selectForZone( $zone, $categorySlugs );
 
-        $html = $this->renderer->render($campaign);
+		if ( $campaign === null ) {
+			return '';
+		}
 
-        if ($html === '') {
-            return '';
-        }
+		$html = $this->renderer->render( $campaign );
 
-        $this->stats->recordImpression($campaign->id, $zone);
+		if ( $html === '' ) {
+			return '';
+		}
 
-        return $html;
-    }
+		$this->stats->recordImpression( $campaign->id, $zone );
+
+		return $html;
+	}
 }

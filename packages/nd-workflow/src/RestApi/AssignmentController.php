@@ -12,38 +12,55 @@ use NDWorkflow\Assignments\AssignmentManager;
 use WP_REST_Request;
 use WP_REST_Response;
 
-final class AssignmentController extends RestController implements RegistersRoutes
-{
-    public function __construct(private readonly AssignmentManager $assignments)
-    {
-    }
+final class AssignmentController extends RestController implements RegistersRoutes {
 
-    public function registerRoutes(Router $router): void
-    {
-        $permission = static fn (): bool => current_user_can(Capability::EDIT_ND_WORKFLOW);
-        $idArg = ['id' => ['type' => 'integer', 'required' => true]];
+	public function __construct( private readonly AssignmentManager $assignments ) {
+	}
 
-        $router->post('nd/v1', '/workflow/posts/(?P<id>\d+)/assignment', [$this, 'assign'], $permission, $idArg + [
-            'user_id' => ['type' => 'integer', 'required' => true],
-        ]);
+	public function registerRoutes( Router $router ): void {
+		$permission = static fn (): bool => current_user_can( Capability::EDIT_ND_WORKFLOW );
+		$idArg      = array(
+			'id' => array(
+				'type'     => 'integer',
+				'required' => true,
+			),
+		);
 
-        $router->delete('nd/v1', '/workflow/posts/(?P<id>\d+)/assignment', [$this, 'unassign'], $permission, $idArg);
-    }
+		$router->post(
+			'nd/v1',
+			'/workflow/posts/(?P<id>\d+)/assignment',
+			array( $this, 'assign' ),
+			$permission,
+			$idArg + array(
+				'user_id' => array(
+					'type'     => 'integer',
+					'required' => true,
+				),
+			)
+		);
 
-    public function assign(WP_REST_Request $request): WP_REST_Response
-    {
-        $postId = (int) $request->get_param('id');
-        $userId = (int) $request->get_param('user_id');
+		$router->delete( 'nd/v1', '/workflow/posts/(?P<id>\d+)/assignment', array( $this, 'unassign' ), $permission, $idArg );
+	}
 
-        $this->assignments->assign($postId, $userId);
+	public function assign( WP_REST_Request $request ): WP_REST_Response {
+		$postId = (int) $request->get_param( 'id' );
+		$userId = (int) $request->get_param( 'user_id' );
 
-        return $this->success(['data' => ['post_id' => $postId, 'assigned_to' => $userId]]);
-    }
+		$this->assignments->assign( $postId, $userId );
 
-    public function unassign(WP_REST_Request $request): WP_REST_Response
-    {
-        $this->assignments->unassign((int) $request->get_param('id'));
+		return $this->success(
+			array(
+				'data' => array(
+					'post_id'     => $postId,
+					'assigned_to' => $userId,
+				),
+			)
+		);
+	}
 
-        return $this->success([], 204);
-    }
+	public function unassign( WP_REST_Request $request ): WP_REST_Response {
+		$this->assignments->unassign( (int) $request->get_param( 'id' ) );
+
+		return $this->success( array(), 204 );
+	}
 }

@@ -10,35 +10,32 @@ use NDCache\Tests\BrainMonkeyTestCase;
 use NDCore\Cache\CacheManager;
 use NDCore\Config\Config;
 
-final class PageCacheStoreTest extends BrainMonkeyTestCase
-{
-    public function test_put_uses_configured_ttl(): void
-    {
-        Functions\expect('set_transient')->once()->with('nd_page:abc', '<html></html>', 7200)->andReturn(true);
+final class PageCacheStoreTest extends BrainMonkeyTestCase {
 
-        $config = new Config(['cache' => ['page_cache' => ['ttl' => 7200]]]);
-        $store = new PageCacheStore(new CacheManager($config), $config);
+	public function test_put_uses_configured_ttl(): void {
+		Functions\expect( 'set_transient' )->once()->with( 'nd_page:abc', '<html></html>', 7200 )->andReturn( true );
 
-        self::assertTrue($store->put('page:abc', '<html></html>'));
-    }
+		$config = new Config( array( 'cache' => array( 'page_cache' => array( 'ttl' => 7200 ) ) ) );
+		$store  = new PageCacheStore( new CacheManager( $config ), $config );
 
-    public function test_get_returns_null_when_not_a_string(): void
-    {
-        Functions\expect('get_transient')->once()->with('nd_page:missing')->andReturn(false);
+		self::assertTrue( $store->put( 'page:abc', '<html></html>' ) );
+	}
 
-        $config = new Config();
-        $store = new PageCacheStore(new CacheManager($config), $config);
+	public function test_get_returns_null_when_not_a_string(): void {
+		Functions\expect( 'get_transient' )->once()->with( 'nd_page:missing' )->andReturn( false );
 
-        self::assertNull($store->get('page:missing'));
-    }
+		$config = new Config();
+		$store  = new PageCacheStore( new CacheManager( $config ), $config );
 
-    public function test_forget_delegates_to_cache_manager(): void
-    {
-        Functions\expect('delete_transient')->once()->with('nd_page:abc')->andReturn(true);
+		self::assertNull( $store->get( 'page:missing' ) );
+	}
 
-        $config = new Config();
-        $store = new PageCacheStore(new CacheManager($config), $config);
+	public function test_forget_delegates_to_cache_manager(): void {
+		Functions\expect( 'delete_transient' )->once()->with( 'nd_page:abc' )->andReturn( true );
 
-        self::assertTrue($store->forget('page:abc'));
-    }
+		$config = new Config();
+		$store  = new PageCacheStore( new CacheManager( $config ), $config );
+
+		self::assertTrue( $store->forget( 'page:abc' ) );
+	}
 }

@@ -8,33 +8,30 @@ use Brain\Monkey\Functions;
 use NDCache\PageCache\PageCacheKey;
 use NDCache\Tests\BrainMonkeyTestCase;
 
-final class PageCacheKeyTest extends BrainMonkeyTestCase
-{
-    public function test_for_url_is_deterministic(): void
-    {
-        self::assertSame(PageCacheKey::forUrl('https://example.test/'), PageCacheKey::forUrl('https://example.test/'));
-        self::assertNotSame(PageCacheKey::forUrl('https://example.test/a'), PageCacheKey::forUrl('https://example.test/b'));
-    }
+final class PageCacheKeyTest extends BrainMonkeyTestCase {
 
-    public function test_for_url_is_prefixed(): void
-    {
-        self::assertStringStartsWith('page:', PageCacheKey::forUrl('https://example.test/'));
-    }
+	public function test_for_url_is_deterministic(): void {
+		self::assertSame( PageCacheKey::forUrl( 'https://example.test/' ), PageCacheKey::forUrl( 'https://example.test/' ) );
+		self::assertNotSame( PageCacheKey::forUrl( 'https://example.test/a' ), PageCacheKey::forUrl( 'https://example.test/b' ) );
+	}
 
-    public function test_for_current_request_combines_scheme_host_and_uri(): void
-    {
-        Functions\expect('is_ssl')->once()->andReturn(true);
-        Functions\expect('sanitize_text_field')->andReturnUsing(static fn (string $v): string => $v);
-        Functions\expect('wp_unslash')->andReturnUsing(static fn (string $v): string => $v);
+	public function test_for_url_is_prefixed(): void {
+		self::assertStringStartsWith( 'page:', PageCacheKey::forUrl( 'https://example.test/' ) );
+	}
 
-        $_SERVER['HTTP_HOST'] = 'example.test';
-        $_SERVER['REQUEST_URI'] = '/noticia/algo';
+	public function test_for_current_request_combines_scheme_host_and_uri(): void {
+		Functions\expect( 'is_ssl' )->once()->andReturn( true );
+		Functions\expect( 'sanitize_text_field' )->andReturnUsing( static fn ( string $v ): string => $v );
+		Functions\expect( 'wp_unslash' )->andReturnUsing( static fn ( string $v ): string => $v );
 
-        self::assertSame(
-            PageCacheKey::forUrl('https://example.test/noticia/algo'),
-            PageCacheKey::forCurrentRequest()
-        );
+		$_SERVER['HTTP_HOST']   = 'example.test';
+		$_SERVER['REQUEST_URI'] = '/noticia/algo';
 
-        unset($_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI']);
-    }
+		self::assertSame(
+			PageCacheKey::forUrl( 'https://example.test/noticia/algo' ),
+			PageCacheKey::forCurrentRequest()
+		);
+
+		unset( $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'] );
+	}
 }

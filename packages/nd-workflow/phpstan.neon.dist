@@ -5,7 +5,20 @@ parameters:
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: true
     checkGenericClassInNonGenericObjectType: true
+    ignoreErrors:
+        -
+            # Coaccionar filas de $wpdb (EditorialNoteRepository) y parámetros
+            # de WP_REST_Request::get_param() (los controladores REST) con
+            # (int)/(string)/(float) es el idiomatismo estándar de esta base
+            # de código; ver la misma justificación en
+            # packages/nd-core/phpstan.neon.dist.
+            message: '#Cannot cast mixed to (int|float|string)#'
+            paths:
+                - src/Notes/EditorialNoteRepository.php
+                - src/RestApi/AssignmentController.php
+                - src/RestApi/CalendarController.php
+                - src/RestApi/NotesController.php
 
-includes:
-    - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
+# szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen
+# automáticamente vía phpstan/extension-installer (composer.json); incluirlos
+# también aquí los registra dos veces y phpstan lo rechaza.

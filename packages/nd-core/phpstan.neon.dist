@@ -9,9 +9,20 @@ parameters:
     checkGenericClassInNonGenericObjectType: true
     ignoreErrors:
         -
-            message: '#(?i)class redis not found#'
-            path: src/Cache/Drivers/RedisCacheDriver.php
+            # phpstan-strict-rules trata cualquier cast de "mixed" como
+            # sospechoso, pero coaccionar valores de configuración/DB no
+            # tipados (Config::get(), filas de $wpdb) con (int)/(string)/
+            # (float) es el idiomatismo estándar de WordPress y de esta
+            # base de código: no son datos de usuario sin validar (esos
+            # pasan por Security\Sanitizer), son valores administrados por
+            # quien despliega el sitio.
+            message: '#Cannot cast mixed to (int|float|string)#'
+            paths:
+                - src/Cache/CacheManager.php
+                - src/Migrator/Migrator.php
+                - src/Queue/QueueManager.php
+                - src/Security/Sanitizer.php
 
-includes:
-    - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
+# szepeviktor/phpstan-wordpress y phpstan/phpstan-strict-rules ya se incluyen
+# automáticamente vía phpstan/extension-installer (composer.json); incluirlos
+# también aquí los registra dos veces y phpstan lo rechaza.

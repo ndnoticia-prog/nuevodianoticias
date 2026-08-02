@@ -6,35 +6,32 @@ namespace NDAds\Stats;
 
 use NDCore\Database\DatabaseManager;
 
-final class StatsRepository
-{
-    public function __construct(private readonly DatabaseManager $db)
-    {
-    }
+final class StatsRepository {
 
-    /**
-     * @return array{impressions: int, clicks: int, ctr: float}
-     */
-    public function summaryForCampaign(int $campaignId): array
-    {
-        $table = $this->db->table('ad_events');
-        $impressions = $this->count($table, $campaignId, 'impression');
-        $clicks = $this->count($table, $campaignId, 'click');
+	public function __construct( private readonly DatabaseManager $db ) {
+	}
 
-        return [
-            'impressions' => $impressions,
-            'clicks' => $clicks,
-            'ctr' => $impressions > 0 ? round($clicks / $impressions * 100, 2) : 0.0,
-        ];
-    }
+	/**
+	 * @return array{impressions: int, clicks: int, ctr: float}
+	 */
+	public function summaryForCampaign( int $campaignId ): array {
+		$table       = $this->db->table( 'ad_events' );
+		$impressions = $this->count( $table, $campaignId, 'impression' );
+		$clicks      = $this->count( $table, $campaignId, 'click' );
 
-    private function count(string $table, int $campaignId, string $eventType): int
-    {
-        $row = $this->db->selectOne(
-            "SELECT COUNT(*) AS total FROM {$table} WHERE campaign_id = %d AND event_type = %s",
-            [$campaignId, $eventType]
-        );
+		return array(
+			'impressions' => $impressions,
+			'clicks'      => $clicks,
+			'ctr'         => $impressions > 0 ? round( $clicks / $impressions * 100, 2 ) : 0.0,
+		);
+	}
 
-        return $row !== null ? (int) $row['total'] : 0;
-    }
+	private function count( string $table, int $campaignId, string $eventType ): int {
+		$row = $this->db->selectOne(
+			"SELECT COUNT(*) AS total FROM {$table} WHERE campaign_id = %d AND event_type = %s",
+			array( $campaignId, $eventType )
+		);
+
+		return $row !== null ? (int) $row['total'] : 0;
+	}
 }

@@ -10,180 +10,169 @@ use NDCore\Container\Exceptions\NotFoundException;
 use NDCore\Container\Exceptions\UnresolvableParameterException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
-use ReflectionException;
 use ReflectionNamedType;
 use ReflectionParameter;
 
 /**
  * Contenedor de inyección de dependencias con autowiring, compatible con PSR-11.
  */
-class Container implements ContainerInterface
-{
-    /**
-     * @var array<string, array{concrete: Closure|string, shared: bool}>
-     */
-    private array $bindings = [];
+class Container implements ContainerInterface {
 
-    /**
-     * @var array<string, object>
-     */
-    private array $instances = [];
+	/**
+	 * @var array<string, array{concrete: Closure|string, shared: bool}>
+	 */
+	private array $bindings = array();
 
-    /**
-     * Pila de abstracts que se están resolviendo actualmente, usada para
-     * detectar dependencias circulares.
-     *
-     * @var list<string>
-     */
-    private array $buildStack = [];
+	/**
+	 * @var array<string, object>
+	 */
+	private array $instances = array();
 
-    public function bind(string $abstract, Closure|string|null $concrete = null, bool $shared = false): void
-    {
-        $concrete ??= $abstract;
+	/**
+	 * Pila de abstracts que se están resolviendo actualmente, usada para
+	 * detectar dependencias circulares.
+	 *
+	 * @var list<string>
+	 */
+	private array $buildStack = array();
 
-        unset($this->instances[$abstract]);
+	public function bind( string $abstract, Closure|string|null $concrete = null, bool $shared = false ): void {
+		$concrete ??= $abstract;
 
-        $this->bindings[$abstract] = [
-            'concrete' => $concrete,
-            'shared' => $shared,
-        ];
-    }
+		unset( $this->instances[ $abstract ] );
 
-    public function singleton(string $abstract, Closure|string|null $concrete = null): void
-    {
-        $this->bind($abstract, $concrete, true);
-    }
+		$this->bindings[ $abstract ] = array(
+			'concrete' => $concrete,
+			'shared'   => $shared,
+		);
+	}
 
-    public function instance(string $abstract, object $instance): void
-    {
-        $this->instances[$abstract] = $instance;
-    }
+	public function singleton( string $abstract, Closure|string|null $concrete = null ): void {
+		$this->bind( $abstract, $concrete, true );
+	}
 
-    public function has(string $id): bool
-    {
-        return isset($this->instances[$id])
-            || isset($this->bindings[$id])
-            || class_exists($id);
-    }
+	public function instance( string $abstract, object $instance ): void {
+		$this->instances[ $abstract ] = $instance;
+	}
 
-    public function get(string $id): mixed
-    {
-        return $this->make($id);
-    }
+	public function has( string $id ): bool {
+		return isset( $this->instances[ $id ] )
+			|| isset( $this->bindings[ $id ] )
+			|| class_exists( $id );
+	}
 
-    /**
-     * @param array<string, mixed> $parameters Parámetros con nombre que sobreescriben la resolución automática.
-     */
-    public function make(string $abstract, array $parameters = []): mixed
-    {
-        if (isset($this->instances[$abstract])) {
-            return $this->instances[$abstract];
-        }
+	public function get( string $id ): mixed {
+		return $this->make( $id );
+	}
 
-        $concrete = $this->bindings[$abstract]['concrete'] ?? $abstract;
-        $shared = $this->bindings[$abstract]['shared'] ?? false;
+	/**
+	 * @param array<string, mixed> $parameters Parámetros con nombre que sobreescriben la resolución automática.
+	 */
+	public function make( string $abstract, array $parameters = array() ): mixed {
+		if ( isset( $this->instances[ $abstract ] ) ) {
+			return $this->instances[ $abstract ];
+		}
 
-        if (in_array($abstract, $this->buildStack, true)) {
-            throw new ContainerException(sprintf(
-                'Dependencia circular detectada al resolver "%s": %s -> %s.',
-                $abstract,
-                implode(' -> ', $this->buildStack),
-                $abstract
-            ));
-        }
+		$concrete = $this->bindings[ $abstract ]['concrete'] ?? $abstract;
+		$shared   = $this->bindings[ $abstract ]['shared'] ?? false;
 
-        $this->buildStack[] = $abstract;
+		if ( in_array( $abstract, $this->buildStack, true ) ) {
+			throw new ContainerException(
+				sprintf(
+					'Dependencia circular detectada al resolver "%s": %s -> %s.',
+					$abstract,
+					implode( ' -> ', $this->buildStack ),
+					$abstract
+				)
+			);
+		}
 
-        try {
-            $object = $concrete instanceof Closure
-                ? $concrete($this, $parameters)
-                : $this->build($concrete, $parameters);
-        } finally {
-            array_pop($this->buildStack);
-        }
+		$this->buildStack[] = $abstract;
 
-        if ($shared) {
-            $this->instances[$abstract] = $object;
-        }
+		try {
+			$object = $concrete instanceof Closure
+				? $concrete( $this, $parameters )
+				: $this->build( $concrete, $parameters );
+		} finally {
+			array_pop( $this->buildStack );
+		}
 
-        return $object;
-    }
+		if ( $shared ) {
+			$this->instances[ $abstract ] = $object;
+		}
 
-    /**
-     * @param array<string, mixed> $parameters
-     */
-    private function build(string $concrete, array $parameters): object
-    {
-        if (! class_exists($concrete)) {
-            throw NotFoundException::forAbstract($concrete);
-        }
+		return $object;
+	}
 
-        try {
-            $reflector = new ReflectionClass($concrete);
-        } catch (ReflectionException $exception) {
-            throw new ContainerException(
-                sprintf('No se pudo reflejar la clase "%s": %s', $concrete, $exception->getMessage()),
-                0,
-                $exception
-            );
-        }
+	/**
+	 * @param array<string, mixed> $parameters
+	 */
+	private function build( string $concrete, array $parameters ): object {
+		if ( ! class_exists( $concrete ) ) {
+			throw NotFoundException::forAbstract( $concrete );
+		}
 
-        if (! $reflector->isInstantiable()) {
-            throw new ContainerException(sprintf('"%s" no es instanciable (interfaz o clase abstracta sin binding).', $concrete));
-        }
+		// class_exists() ya garantiza que $concrete es una clase real y
+		// autocargable, así que ReflectionClass no puede lanzar
+		// ReflectionException aquí (solo lo hace cuando la clase/interfaz/
+		// trait no existe).
+		$reflector = new ReflectionClass( $concrete );
 
-        $constructor = $reflector->getConstructor();
+		if ( ! $reflector->isInstantiable() ) {
+			throw new ContainerException( sprintf( '"%s" no es instanciable (interfaz o clase abstracta sin binding).', $concrete ) );
+		}
 
-        if ($constructor === null) {
-            return new $concrete();
-        }
+		$constructor = $reflector->getConstructor();
 
-        $dependencies = [];
+		if ( $constructor === null ) {
+			return new $concrete();
+		}
 
-        foreach ($constructor->getParameters() as $parameter) {
-            if (array_key_exists($parameter->getName(), $parameters)) {
-                $dependencies[] = $parameters[$parameter->getName()];
+		$dependencies = array();
 
-                continue;
-            }
+		foreach ( $constructor->getParameters() as $parameter ) {
+			if ( array_key_exists( $parameter->getName(), $parameters ) ) {
+				$dependencies[] = $parameters[ $parameter->getName() ];
 
-            $dependencies[] = $this->resolveParameter($parameter, $concrete);
-        }
+				continue;
+			}
 
-        return $reflector->newInstanceArgs($dependencies);
-    }
+			$dependencies[] = $this->resolveParameter( $parameter, $concrete );
+		}
 
-    private function resolveParameter(ReflectionParameter $parameter, string $class): mixed
-    {
-        $type = $parameter->getType();
+		return $reflector->newInstanceArgs( $dependencies );
+	}
 
-        if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
-            /** @var class-string $typeName */
-            $typeName = $type->getName();
+	private function resolveParameter( ReflectionParameter $parameter, string $class ): mixed {
+		$type = $parameter->getType();
 
-            try {
-                return $this->make($typeName);
-            } catch (ContainerException | NotFoundException $exception) {
-                if ($parameter->isDefaultValueAvailable()) {
-                    return $parameter->getDefaultValue();
-                }
+		if ( $type instanceof ReflectionNamedType && ! $type->isBuiltin() ) {
+			/** @var class-string $typeName */
+			$typeName = $type->getName();
 
-                if ($type->allowsNull()) {
-                    return null;
-                }
+			try {
+				return $this->make( $typeName );
+			} catch ( ContainerException | NotFoundException $exception ) {
+				if ( $parameter->isDefaultValueAvailable() ) {
+					return $parameter->getDefaultValue();
+				}
 
-                throw $exception;
-            }
-        }
+				if ( $type->allowsNull() ) {
+					return null;
+				}
 
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
+				throw $exception;
+			}
+		}
 
-        if ($type instanceof ReflectionNamedType && $type->allowsNull()) {
-            return null;
-        }
+		if ( $parameter->isDefaultValueAvailable() ) {
+			return $parameter->getDefaultValue();
+		}
 
-        throw UnresolvableParameterException::forParameter($parameter->getName(), $class);
-    }
+		if ( $type instanceof ReflectionNamedType && $type->allowsNull() ) {
+			return null;
+		}
+
+		throw UnresolvableParameterException::forParameter( $parameter->getName(), $class );
+	}
 }

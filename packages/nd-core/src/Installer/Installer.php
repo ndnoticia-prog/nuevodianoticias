@@ -13,60 +13,55 @@ use NDCore\Settings\SettingsRepository;
  * Orquesta lo que debe ocurrir al activar/desinstalar el plugin: migraciones
  * de todos los paquetes registrados, capacidades y ajustes por defecto.
  */
-final class Installer
-{
-    public function __construct(
-        private readonly Application $app,
-        private readonly Migrator $migrator,
-        private readonly PermissionManager $permissions,
-        private readonly SettingsRepository $settings,
-    ) {
-    }
+final class Installer {
 
-    public function install(): void
-    {
-        $this->migrator->run($this->allMigrationClasses());
-        $this->permissions->registerCapabilities();
-        $this->seedDefaultSettings();
+	public function __construct(
+		private readonly Application $app,
+		private readonly Migrator $migrator,
+		private readonly PermissionManager $permissions,
+		private readonly SettingsRepository $settings,
+	) {
+	}
 
-        $this->settings->set('installed_version', defined('NDCORE_VERSION') ? NDCORE_VERSION : null);
-        $this->settings->set('installed_at', current_time('mysql', true), false);
+	public function install(): void {
+		$this->migrator->run( $this->allMigrationClasses() );
+		$this->permissions->registerCapabilities();
+		$this->seedDefaultSettings();
 
-        flush_rewrite_rules();
-    }
+		$this->settings->set( 'installed_version', defined( 'NDCORE_VERSION' ) ? NDCORE_VERSION : null );
+		$this->settings->set( 'installed_at', current_time( 'mysql', true ), false );
 
-    public function uninstall(): void
-    {
-        $this->permissions->removeCapabilities();
-        $this->migrator->rollback($this->allMigrationClasses());
-        $this->purgeSettings();
-    }
+		flush_rewrite_rules();
+	}
 
-    /**
-     * @return list<class-string<\NDCore\Migrator\Migration>>
-     */
-    private function allMigrationClasses(): array
-    {
-        $classes = [];
+	public function uninstall(): void {
+		$this->permissions->removeCapabilities();
+		$this->migrator->rollback( $this->allMigrationClasses() );
+		$this->purgeSettings();
+	}
 
-        foreach ($this->app->providers() as $provider) {
-            array_push($classes, ...$provider->migrations());
-        }
+	/**
+	 * @return list<class-string<\NDCore\Migrator\Migration>>
+	 */
+	private function allMigrationClasses(): array {
+		$classes = array();
 
-        return array_values(array_unique($classes));
-    }
+		foreach ( $this->app->providers() as $provider ) {
+			array_push( $classes, ...$provider->migrations() );
+		}
 
-    private function seedDefaultSettings(): void
-    {
-        if (! $this->settings->has('cache_driver')) {
-            $this->settings->set('cache_driver', 'transient');
-        }
-    }
+		return array_values( array_unique( $classes ) );
+	}
 
-    private function purgeSettings(): void
-    {
-        foreach (['installed_version', 'installed_at', 'cache_driver'] as $key) {
-            $this->settings->forget($key);
-        }
-    }
+	private function seedDefaultSettings(): void {
+		if ( ! $this->settings->has( 'cache_driver' ) ) {
+			$this->settings->set( 'cache_driver', 'transient' );
+		}
+	}
+
+	private function purgeSettings(): void {
+		foreach ( array( 'installed_version', 'installed_at', 'cache_driver' ) as $key ) {
+			$this->settings->forget( $key );
+		}
+	}
 }

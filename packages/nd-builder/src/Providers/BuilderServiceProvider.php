@@ -15,27 +15,34 @@ use NDCore\Providers\ServiceProvider;
  * versión (`hero`, `noticias`, `breaking`) apuntando a las plantillas que
  * el tema activo debe proveer bajo `template-parts/blocks/`.
  */
-final class BuilderServiceProvider extends ServiceProvider
-{
-    /**
-     * @var list<string>
-     */
-    private const DEFAULT_BLOCK_TYPES = ['hero', 'noticias', 'breaking'];
+final class BuilderServiceProvider extends ServiceProvider {
 
-    public function register(): void
-    {
-        $this->container->singleton(BlockRegistry::class, static function (): BlockRegistry {
-            $registry = new BlockRegistry();
+	/**
+	 * @var list<string>
+	 */
+	private const DEFAULT_BLOCK_TYPES = array( 'hero', 'noticias', 'breaking' );
 
-            foreach (self::DEFAULT_BLOCK_TYPES as $type) {
-                $registry->register($type, new TemplateBlockRenderer([
-                    "template-parts/blocks/{$type}",
-                ]));
-            }
+	public function register(): void {
+		$this->container->singleton(
+			BlockRegistry::class,
+			static function (): BlockRegistry {
+				$registry = new BlockRegistry();
 
-            return $registry;
-        });
+				foreach ( self::DEFAULT_BLOCK_TYPES as $type ) {
+					$registry->register(
+						$type,
+						new TemplateBlockRenderer(
+							array(
+								"template-parts/blocks/{$type}",
+							)
+						)
+					);
+				}
 
-        $this->container->singleton(Renderer::class);
-    }
+				return $registry;
+			}
+		);
+
+		$this->container->singleton( Renderer::class );
+	}
 }

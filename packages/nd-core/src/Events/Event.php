@@ -10,17 +10,15 @@ namespace NDCore\Events;
  * `ArticlePublished`), a diferencia de un hook de WordPress, que puede
  * modificar el flujo de ejecución.
  */
-abstract class Event
-{
-    private bool $propagationStopped = false;
+abstract class Event {
 
-    public function stopPropagation(): void
-    {
-        $this->propagationStopped = true;
-    }
+	private bool $propagationStopped = false;
 
-    public function isPropagationStopped(): bool
-    {
-        return $this->propagationStopped;
-    }
+	public function stopPropagation(): void {
+		$this->propagationStopped = true;
+	}
+
+	public function isPropagationStopped(): bool {
+		return $this->propagationStopped;
+	}
 }

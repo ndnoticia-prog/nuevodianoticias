@@ -12,60 +12,61 @@ use NDCore\Config\Config;
  * la almacena para la siguiente petición. Nunca cachea peticiones de
  * usuarios autenticados, admin, AJAX/REST/cron, ni búsquedas.
  */
-final class PageCacheMiddleware
-{
-    public function __construct(
-        private readonly PageCacheStore $store,
-        private readonly Config $config,
-    ) {
-    }
+final class PageCacheMiddleware {
 
-    public function maybeServeCached(): void
-    {
-        if (! $this->isCacheable()) {
-            return;
-        }
+	public function __construct(
+		private readonly PageCacheStore $store,
+		private readonly Config $config,
+	) {
+	}
 
-        $key = PageCacheKey::forCurrentRequest();
-        $cached = $this->store->get($key);
+	public function maybeServeCached(): void {
+		if ( ! $this->isCacheable() ) {
+			return;
+		}
 
-        if ($cached !== null) {
-            header('X-ND-Cache: HIT');
-            echo $cached;
-            exit;
-        }
+		$key    = PageCacheKey::forCurrentRequest();
+		$cached = $this->store->get( $key );
 
-        header('X-ND-Cache: MISS');
-        ob_start(function (string $html) use ($key): string {
-            if ($html !== '' && ! is_404()) {
-                $this->store->put($key, $html);
-            }
+		if ( $cached !== null ) {
+			header( 'X-ND-Cache: HIT' );
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $cached es la página HTML completa ya renderizada por WordPress en una petición anterior, no dato de usuario; escaparla rompería el HTML.
+			echo $cached;
+			exit;
+		}
 
-            return $html;
-        });
-    }
+		header( 'X-ND-Cache: MISS' );
+		ob_start(
+			function ( string $html ) use ( $key ): string {
+				if ( $html !== '' && ! is_404() ) {
+					$this->store->put( $key, $html );
+				}
 
-    private function isCacheable(): bool
-    {
-        if (! (bool) $this->config->get('cache.page_cache.enabled', true)) {
-            return false;
-        }
+				return $html;
+			}
+		);
+	}
 
-        if (is_admin() || is_user_logged_in() || is_search()) {
-            return false;
-        }
+	private function isCacheable(): bool {
+		if ( ! (bool) $this->config->get( 'cache.page_cache.enabled', true ) ) {
+			return false;
+		}
 
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
-            return false;
-        }
+		if ( is_admin() || is_user_logged_in() || is_search() ) {
+			return false;
+		}
 
-        if ((defined('DOING_AJAX') && DOING_AJAX)
-            || (defined('DOING_CRON') && DOING_CRON)
-            || (defined('REST_REQUEST') && REST_REQUEST)
-        ) {
-            return false;
-        }
+		if ( ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) !== 'GET' ) {
+			return false;
+		}
 
-        return true;
-    }
+		if ( ( defined( 'DOING_AJAX' ) && DOING_AJAX )
+			|| ( defined( 'DOING_CRON' ) && DOING_CRON )
+			|| ( defined( 'REST_REQUEST' ) && REST_REQUEST )
+		) {
+			return false;
+		}
+
+		return true;
+	}
 }

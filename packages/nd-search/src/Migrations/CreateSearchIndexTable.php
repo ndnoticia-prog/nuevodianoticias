@@ -12,14 +12,13 @@ use NDCore\Migrator\Migration;
  * (una tabla core de WordPress) para añadirle un índice — más seguro y
  * completamente bajo control de este paquete.
  */
-final class CreateSearchIndexTable extends Migration
-{
-    public function up(DatabaseManager $db): void
-    {
-        $table = $db->table('search_index');
-        $charsetCollate = $db->charsetCollate();
+final class CreateSearchIndexTable extends Migration {
 
-        $sql = "CREATE TABLE {$table} (
+	public function up( DatabaseManager $db ): void {
+		$table          = $db->table( 'search_index' );
+		$charsetCollate = $db->charsetCollate();
+
+		$sql = "CREATE TABLE {$table} (
             post_id BIGINT UNSIGNED NOT NULL,
             title TEXT NOT NULL,
             content_text LONGTEXT NOT NULL,
@@ -28,16 +27,15 @@ final class CreateSearchIndexTable extends Migration
             FULLTEXT KEY nd_search_fulltext (title, content_text)
         ) {$charsetCollate};";
 
-        if (! function_exists('dbDelta')) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        }
+		if ( ! function_exists( 'dbDelta' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		}
 
-        dbDelta($sql);
-    }
+		dbDelta( $sql );
+	}
 
-    public function down(DatabaseManager $db): void
-    {
-        $table = $db->table('search_index');
-        $db->statement("DROP TABLE IF EXISTS {$table}");
-    }
+	public function down( DatabaseManager $db ): void {
+		$table = $db->table( 'search_index' );
+		$db->statement( "DROP TABLE IF EXISTS {$table}" );
+	}
 }

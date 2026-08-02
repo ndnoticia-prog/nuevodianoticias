@@ -6,6 +6,3 @@ parameters:
     checkMissingIterableValueType: true
     checkGenericClassInNonGenericObjectType: true
 
-includes:
-    - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon

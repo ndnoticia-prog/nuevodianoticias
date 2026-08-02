@@ -12,34 +12,32 @@ use NDCore\Events\EventDispatcher;
  * lista de {@see Block} a HTML delegando en el {@see BlockRegistry}, y
  * despacha {@see BlockRendered} por cada bloque efectivamente renderizado.
  */
-final class Renderer
-{
-    public function __construct(
-        private readonly BlockRegistry $registry,
-        private readonly EventDispatcher $events,
-    ) {
-    }
+final class Renderer {
 
-    public function render(Block $block): string
-    {
-        if (! $this->registry->has($block->type)) {
-            return '';
-        }
+	public function __construct(
+		private readonly BlockRegistry $registry,
+		private readonly EventDispatcher $events,
+	) {
+	}
 
-        $html = $this->registry->rendererFor($block->type)->render($block);
+	public function render( Block $block ): string {
+		if ( ! $this->registry->has( $block->type ) ) {
+			return '';
+		}
 
-        if ($html !== '') {
-            $this->events->dispatch(new BlockRendered($block, $html));
-        }
+		$html = $this->registry->rendererFor( $block->type )->render( $block );
 
-        return $html;
-    }
+		if ( $html !== '' ) {
+			$this->events->dispatch( new BlockRendered( $block, $html ) );
+		}
 
-    /**
-     * @param list<Block> $blocks
-     */
-    public function renderMany(array $blocks): string
-    {
-        return implode('', array_map($this->render(...), $blocks));
-    }
+		return $html;
+	}
+
+	/**
+	 * @param list<Block> $blocks
+	 */
+	public function renderMany( array $blocks ): string {
+		return implode( '', array_map( $this->render( ... ), $blocks ) );
+	}
 }

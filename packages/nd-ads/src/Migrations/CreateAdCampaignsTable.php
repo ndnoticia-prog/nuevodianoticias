@@ -7,14 +7,13 @@ namespace NDAds\Migrations;
 use NDCore\Database\DatabaseManager;
 use NDCore\Migrator\Migration;
 
-final class CreateAdCampaignsTable extends Migration
-{
-    public function up(DatabaseManager $db): void
-    {
-        $table = $db->table('ad_campaigns');
-        $charsetCollate = $db->charsetCollate();
+final class CreateAdCampaignsTable extends Migration {
 
-        $sql = "CREATE TABLE {$table} (
+	public function up( DatabaseManager $db ): void {
+		$table          = $db->table( 'ad_campaigns' );
+		$charsetCollate = $db->charsetCollate();
+
+		$sql = "CREATE TABLE {$table} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             name VARCHAR(191) NOT NULL,
             advertiser VARCHAR(191) NOT NULL DEFAULT '',
@@ -32,16 +31,15 @@ final class CreateAdCampaignsTable extends Migration
             KEY priority (priority)
         ) {$charsetCollate};";
 
-        if (! function_exists('dbDelta')) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        }
+		if ( ! function_exists( 'dbDelta' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		}
 
-        dbDelta($sql);
-    }
+		dbDelta( $sql );
+	}
 
-    public function down(DatabaseManager $db): void
-    {
-        $table = $db->table('ad_campaigns');
-        $db->statement("DROP TABLE IF EXISTS {$table}");
-    }
+	public function down( DatabaseManager $db ): void {
+		$table = $db->table( 'ad_campaigns' );
+		$db->statement( "DROP TABLE IF EXISTS {$table}" );
+	}
 }

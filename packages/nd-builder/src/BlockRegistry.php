@@ -12,40 +12,38 @@ use NDBuilder\Contracts\BlockRenderer;
  * (`hero`, `noticias`, `breaking`, ...). Cualquier paquete puede añadir
  * nuevos tipos de bloque registrándose aquí.
  */
-final class BlockRegistry
-{
-    /**
-     * @var array<string, BlockRenderer>
-     */
-    private array $renderers = [];
+final class BlockRegistry {
 
-    public function register(string $type, BlockRenderer $renderer): void
-    {
-        $this->renderers[$type] = $renderer;
-    }
+	/**
+	 * @var array<string, BlockRenderer>
+	 */
+	private array $renderers = array();
 
-    public function has(string $type): bool
-    {
-        return isset($this->renderers[$type]);
-    }
+	public function register( string $type, BlockRenderer $renderer ): void {
+		$this->renderers[ $type ] = $renderer;
+	}
 
-    public function rendererFor(string $type): BlockRenderer
-    {
-        if (! isset($this->renderers[$type])) {
-            throw new InvalidArgumentException(sprintf(
-                'No hay ningún renderer registrado para el tipo de bloque "%s".',
-                $type
-            ));
-        }
+	public function has( string $type ): bool {
+		return isset( $this->renderers[ $type ] );
+	}
 
-        return $this->renderers[$type];
-    }
+	public function rendererFor( string $type ): BlockRenderer {
+		if ( ! isset( $this->renderers[ $type ] ) ) {
+			throw new InvalidArgumentException(
+				sprintf(
+					'No hay ningún renderer registrado para el tipo de bloque "%s".',
+					$type
+				)
+			);
+		}
 
-    /**
-     * @return list<string>
-     */
-    public function registeredTypes(): array
-    {
-        return array_keys($this->renderers);
-    }
+		return $this->renderers[ $type ];
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	public function registeredTypes(): array {
+		return array_keys( $this->renderers );
+	}
 }

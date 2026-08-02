@@ -13,74 +13,70 @@ use NDCore\Database\DatabaseManager;
  * WordPress) y registra una impresión por cada artículo mostrado en los
  * bloques de portada, base para calcular CTR (impresiones vs. pageviews).
  */
-final class ImpressionRecorder
-{
-    private const TABLE = 'analytics_impressions';
+final class ImpressionRecorder {
 
-    /**
-     * @var list<string>
-     */
-    private const TRACKED_BLOCK_TYPES = ['hero', 'noticias'];
+	private const TABLE = 'analytics_impressions';
 
-    public function __construct(private readonly DatabaseManager $db)
-    {
-    }
+	/**
+	 * @var list<string>
+	 */
+	private const TRACKED_BLOCK_TYPES = array( 'hero', 'noticias' );
 
-    public function handle(BlockRendered $event): void
-    {
-        $block = $event->block;
+	public function __construct( private readonly DatabaseManager $db ) {
+	}
 
-        if (! in_array($block->type, self::TRACKED_BLOCK_TYPES, true)) {
-            return;
-        }
+	public function handle( BlockRendered $event ): void {
+		$block = $event->block;
 
-        foreach ($this->postIdsFromBlock($block) as $postId) {
-            $this->record($postId, $block->type);
-        }
-    }
+		if ( ! in_array( $block->type, self::TRACKED_BLOCK_TYPES, true ) ) {
+			return;
+		}
 
-    /**
-     * @return list<int>
-     */
-    private function postIdsFromBlock(Block $block): array
-    {
-        if ($block->type === 'hero') {
-            $postId = $block->attribute('post_id');
+		foreach ( $this->postIdsFromBlock( $block ) as $postId ) {
+			$this->record( $postId, $block->type );
+		}
+	}
 
-            return is_int($postId) ? [$postId] : [];
-        }
+	/**
+	 * @return list<int>
+	 */
+	private function postIdsFromBlock( Block $block ): array {
+		if ( $block->type === 'hero' ) {
+			$postId = $block->attribute( 'post_id' );
 
-        $items = $block->attribute('items', []);
+			return is_int( $postId ) ? array( $postId ) : array();
+		}
 
-        if (! is_array($items)) {
-            return [];
-        }
+		$items = $block->attribute( 'items', array() );
 
-        $postIds = [];
+		if ( ! is_array( $items ) ) {
+			return array();
+		}
 
-        foreach ($items as $item) {
-            if (is_array($item) && isset($item['post_id']) && is_int($item['post_id'])) {
-                $postIds[] = $item['post_id'];
-            }
-        }
+		$postIds = array();
 
-        return $postIds;
-    }
+		foreach ( $items as $item ) {
+			if ( is_array( $item ) && isset( $item['post_id'] ) && is_int( $item['post_id'] ) ) {
+				$postIds[] = $item['post_id'];
+			}
+		}
 
-    private function record(int $postId, string $context): void
-    {
-        $this->db->insert(
-            $this->db->table(self::TABLE),
-            [
-                'post_id' => $postId,
-                'context' => $context,
-                'viewed_at' => current_time('mysql', true),
-            ],
-            [
-                'post_id' => '%d',
-                'context' => '%s',
-                'viewed_at' => '%s',
-            ]
-        );
-    }
+		return $postIds;
+	}
+
+	private function record( int $postId, string $context ): void {
+		$this->db->insert(
+			$this->db->table( self::TABLE ),
+			array(
+				'post_id'   => $postId,
+				'context'   => $context,
+				'viewed_at' => current_time( 'mysql', true ),
+			),
+			array(
+				'post_id'   => '%d',
+				'context'   => '%s',
+				'viewed_at' => '%s',
+			)
+		);
+	}
 }

@@ -7,14 +7,13 @@ namespace NDWorkflow\Migrations;
 use NDCore\Database\DatabaseManager;
 use NDCore\Migrator\Migration;
 
-final class CreateEditorialNotesTable extends Migration
-{
-    public function up(DatabaseManager $db): void
-    {
-        $table = $db->table('editorial_notes');
-        $charsetCollate = $db->charsetCollate();
+final class CreateEditorialNotesTable extends Migration {
 
-        $sql = "CREATE TABLE {$table} (
+	public function up( DatabaseManager $db ): void {
+		$table          = $db->table( 'editorial_notes' );
+		$charsetCollate = $db->charsetCollate();
+
+		$sql = "CREATE TABLE {$table} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             post_id BIGINT UNSIGNED NOT NULL,
             author_id BIGINT UNSIGNED NOT NULL,
@@ -25,16 +24,15 @@ final class CreateEditorialNotesTable extends Migration
             KEY post_id (post_id)
         ) {$charsetCollate};";
 
-        if (! function_exists('dbDelta')) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        }
+		if ( ! function_exists( 'dbDelta' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		}
 
-        dbDelta($sql);
-    }
+		dbDelta( $sql );
+	}
 
-    public function down(DatabaseManager $db): void
-    {
-        $table = $db->table('editorial_notes');
-        $db->statement("DROP TABLE IF EXISTS {$table}");
-    }
+	public function down( DatabaseManager $db ): void {
+		$table = $db->table( 'editorial_notes' );
+		$db->statement( "DROP TABLE IF EXISTS {$table}" );
+	}
 }

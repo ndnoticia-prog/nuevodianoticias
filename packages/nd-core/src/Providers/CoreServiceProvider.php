@@ -25,71 +25,88 @@ use NDCore\Updater\UpdateChecker;
  * Registra los servicios transversales del núcleo: base de datos, caché,
  * colas, scheduler, seguridad, permisos y ajustes.
  */
-final class CoreServiceProvider extends ServiceProvider
-{
-    private const QUEUE_TICK_HOOK = 'nd_core/queue/tick';
-    private const QUEUE_SCHEDULE = 'nd_every_minute';
-    private const QUEUE_BATCH_SIZE = 20;
+final class CoreServiceProvider extends ServiceProvider {
 
-    public function register(): void
-    {
-        $this->container->singleton(DatabaseManager::class, static fn (): DatabaseManager => new DatabaseManager());
-        $this->container->singleton(Migrator::class);
-        $this->container->singleton(Filesystem::class);
-        $this->container->singleton(Client::class);
-        $this->container->singleton(Nonce::class);
-        $this->container->singleton(Sanitizer::class);
-        $this->container->singleton(Encryption::class, static fn (): Encryption => Encryption::fromWordPressSalts());
-        $this->container->singleton(PermissionManager::class);
-        $this->container->singleton(SettingsRepository::class);
-        $this->container->singleton(CacheManager::class);
-        $this->container->singleton(QueueManager::class);
-        $this->container->singleton(Scheduler::class);
+	private const QUEUE_TICK_HOOK  = 'nd_core/queue/tick';
+	private const QUEUE_SCHEDULE   = 'nd_every_minute';
+	private const QUEUE_BATCH_SIZE = 20;
 
-        if (defined('NDCORE_PLUGIN_FILE') && defined('NDCORE_VERSION')) {
-            $this->container->singleton(UpdateChecker::class, function (): UpdateChecker {
-                /** @var Config $config */
-                $config = $this->container->make(Config::class);
+	public function register(): void {
+		$this->container->singleton( DatabaseManager::class, static fn (): DatabaseManager => new DatabaseManager() );
+		$this->container->singleton( Migrator::class );
+		$this->container->singleton( Filesystem::class );
+		$this->container->singleton( Client::class );
+		$this->container->singleton( Nonce::class );
+		$this->container->singleton( Sanitizer::class );
+		$this->container->singleton( Encryption::class, static fn (): Encryption => Encryption::fromWordPressSalts() );
+		$this->container->singleton( PermissionManager::class );
+		$this->container->singleton( SettingsRepository::class );
+		$this->container->singleton( CacheManager::class );
+		$this->container->singleton( QueueManager::class );
+		$this->container->singleton( Scheduler::class );
 
-                return new UpdateChecker(
-                    http: $this->container->make(Client::class),
-                    cache: $this->container->make(CacheManager::class),
-                    pluginFile: NDCORE_PLUGIN_FILE,
-                    currentVersion: NDCORE_VERSION,
-                    repository: (string) $config->get('updater.repository', 'ndnoticia-prog/nd-platform'),
-                    releaseAssetName: (string) $config->get('updater.release_asset_name', 'nd-core.zip'),
-                );
-            });
-        }
-    }
+		if ( defined( 'NDCORE_PLUGIN_FILE' ) && defined( 'NDCORE_VERSION' ) ) {
+			$this->container->singleton(
+				UpdateChecker::class,
+				function (): UpdateChecker {
+					/** @var Config $config */
+					$config = $this->container->make( Config::class );
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+					/** @var Client $http */
+					$http = $this->container->make( Client::class );
 
-        /** @var Scheduler $scheduler */
-        $scheduler = $this->container->make(Scheduler::class);
+					/** @var CacheManager $cache */
+					$cache = $this->container->make( CacheManager::class );
 
-        $scheduler->registerSchedule(self::QUEUE_SCHEDULE, MINUTE_IN_SECONDS, 'ND Platform: cada minuto');
+					$repository       = $config->get( 'updater.repository', 'ndnoticia-prog/nd-platform' );
+					$releaseAssetName = $config->get( 'updater.release_asset_name', 'nd-core.zip' );
 
-        $hooks->addAction('init', static function () use ($scheduler): void {
-            $scheduler->scheduleRecurring(self::QUEUE_TICK_HOOK, self::QUEUE_SCHEDULE);
-        });
+					return new UpdateChecker(
+						http: $http,
+						cache: $cache,
+						pluginFile: NDCORE_PLUGIN_FILE,
+						currentVersion: NDCORE_VERSION,
+						repository: is_string( $repository ) ? $repository : 'ndnoticia-prog/nd-platform',
+						releaseAssetName: is_string( $releaseAssetName ) ? $releaseAssetName : 'nd-core.zip',
+					);
+				}
+			);
+		}
+	}
 
-        $hooks->addAction(self::QUEUE_TICK_HOOK, function (): void {
-            /** @var QueueManager $queue */
-            $queue = $this->container->make(QueueManager::class);
-            $queue->processDueJobs(self::QUEUE_BATCH_SIZE);
-        });
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        if (defined('NDCORE_PLUGIN_FILE') && defined('NDCORE_VERSION')) {
-            $this->container->make(UpdateChecker::class)->register($hooks);
-        }
-    }
+		/** @var Scheduler $scheduler */
+		$scheduler = $this->container->make( Scheduler::class );
 
-    public function migrations(): array
-    {
-        return [CreateJobsTable::class];
-    }
+		$scheduler->registerSchedule( self::QUEUE_SCHEDULE, MINUTE_IN_SECONDS, 'ND Platform: cada minuto' );
+
+		$hooks->addAction(
+			'init',
+			static function () use ( $scheduler ): void {
+				$scheduler->scheduleRecurring( self::QUEUE_TICK_HOOK, self::QUEUE_SCHEDULE );
+			}
+		);
+
+		$hooks->addAction(
+			self::QUEUE_TICK_HOOK,
+			function (): void {
+				/** @var QueueManager $queue */
+				$queue = $this->container->make( QueueManager::class );
+				$queue->processDueJobs( self::QUEUE_BATCH_SIZE );
+			}
+		);
+
+		if ( defined( 'NDCORE_PLUGIN_FILE' ) && defined( 'NDCORE_VERSION' ) ) {
+			/** @var UpdateChecker $updateChecker */
+			$updateChecker = $this->container->make( UpdateChecker::class );
+			$updateChecker->register( $hooks );
+		}
+	}
+
+	public function migrations(): array {
+		return array( CreateJobsTable::class );
+	}
 }

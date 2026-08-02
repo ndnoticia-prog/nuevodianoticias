@@ -11,68 +11,64 @@ use NDCore\Container\Container;
  * Bus de eventos interno de ND Platform, independiente del sistema de hooks
  * de WordPress. Usado para comunicación desacoplada entre paquetes.
  */
-final class EventDispatcher
-{
-    /**
-     * @var array<class-string<Event>, list<array{listener: Listener|Closure|class-string<Listener>, priority: int}>>
-     */
-    private array $listeners = [];
+final class EventDispatcher {
 
-    public function __construct(private readonly Container $container)
-    {
-    }
+	/**
+	 * @var array<class-string<Event>, list<array{listener: Listener|Closure|string, priority: int}>>
+	 */
+	private array $listeners = array();
 
-    /**
-     * @param class-string<Event> $eventClass
-     */
-    public function listen(string $eventClass, Listener|Closure|string $listener, int $priority = 10): void
-    {
-        $this->listeners[$eventClass][] = [
-            'listener' => $listener,
-            'priority' => $priority,
-        ];
-    }
+	public function __construct( private readonly Container $container ) {
+	}
 
-    public function dispatch(Event $event): Event
-    {
-        $listeners = $this->listeners[$event::class] ?? [];
+	/**
+	 * @param class-string<Event> $eventClass
+	 */
+	public function listen( string $eventClass, Listener|Closure|string $listener, int $priority = 10 ): void {
+		$this->listeners[ $eventClass ][] = array(
+			'listener' => $listener,
+			'priority' => $priority,
+		);
+	}
 
-        usort($listeners, static fn (array $a, array $b): int => $a['priority'] <=> $b['priority']);
+	public function dispatch( Event $event ): Event {
+		$listeners = $this->listeners[ $event::class ] ?? array();
 
-        foreach ($listeners as $entry) {
-            if ($event->isPropagationStopped()) {
-                break;
-            }
+		usort( $listeners, static fn ( array $a, array $b ): int => $a['priority'] <=> $b['priority'] );
 
-            $this->invoke($entry['listener'], $event);
-        }
+		foreach ( $listeners as $entry ) {
+			if ( $event->isPropagationStopped() ) {
+				break;
+			}
 
-        return $event;
-    }
+			$this->invoke( $entry['listener'], $event );
+		}
 
-    /**
-     * @param class-string<Event> $eventClass
-     */
-    public function hasListeners(string $eventClass): bool
-    {
-        return ! empty($this->listeners[$eventClass]);
-    }
+		return $event;
+	}
 
-    /**
-     * @param Listener|Closure|class-string<Listener> $listener
-     */
-    private function invoke(Listener|Closure|string $listener, Event $event): void
-    {
-        if ($listener instanceof Closure) {
-            $listener($event);
+	/**
+	 * @param class-string<Event> $eventClass
+	 */
+	public function hasListeners( string $eventClass ): bool {
+		return isset( $this->listeners[ $eventClass ] ) && $this->listeners[ $eventClass ] !== array();
+	}
 
-            return;
-        }
+	private function invoke( Listener|Closure|string $listener, Event $event ): void {
+		if ( $listener instanceof Closure ) {
+			$listener( $event );
 
-        $instance = $listener instanceof Listener
-            ? $listener
-            : $this->container->make($listener);
+			return;
+		}
 
-        $instance->handle($event);
-    }
+		if ( $listener instanceof Listener ) {
+			$listener->handle( $event );
+
+			return;
+		}
+
+		/** @var Listener $instance */
+		$instance = $this->container->make( $listener );
+		$instance->handle( $event );
+	}
 }

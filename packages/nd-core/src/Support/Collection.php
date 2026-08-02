@@ -17,185 +17,188 @@ use Traversable;
  * @implements ArrayAccess<TKey, TValue>
  * @implements IteratorAggregate<TKey, TValue>
  */
-final class Collection implements ArrayAccess, Countable, IteratorAggregate
-{
-    /**
-     * @param array<TKey, TValue> $items
-     */
-    public function __construct(private array $items = [])
-    {
-    }
+final class Collection implements ArrayAccess, Countable, IteratorAggregate {
 
-    /**
-     * @param array<TKey, TValue> $items
-     */
-    public static function make(array $items = []): self
-    {
-        return new self($items);
-    }
+	/**
+	 * @param array<TKey, TValue> $items
+	 */
+	public function __construct( private array $items = array() ) {
+	}
 
-    /**
-     * @param callable(TValue, TKey): mixed $callback
-     */
-    public function map(callable $callback): self
-    {
-        return new self(array_map($callback, $this->items, array_keys($this->items)));
-    }
+	/**
+	 * @param array<TKey, TValue> $items
+	 *
+	 * @return self<TKey, TValue>
+	 */
+	public static function make( array $items = array() ): self {
+		return new self( $items );
+	}
 
-    /**
-     * @param (callable(TValue, TKey): bool)|null $callback
-     */
-    public function filter(?callable $callback = null): self
-    {
-        $filtered = $callback === null
-            ? array_filter($this->items)
-            : array_filter($this->items, $callback, ARRAY_FILTER_USE_BOTH);
+	/**
+	 * @template TMapped
+	 *
+	 * @param callable(TValue, TKey): TMapped $callback
+	 *
+	 * @return self<TKey, TMapped>
+	 */
+	public function map( callable $callback ): self {
+		return new self( array_map( $callback, $this->items, array_keys( $this->items ) ) );
+	}
 
-        return new self($filtered);
-    }
+	/**
+	 * @param (callable(TValue, TKey): bool)|null $callback
+	 *
+	 * @return self<TKey, TValue>
+	 */
+	public function filter( ?callable $callback = null ): self {
+		$filtered = $callback === null
+			? array_filter( $this->items )
+			: array_filter( $this->items, $callback, ARRAY_FILTER_USE_BOTH );
 
-    /**
-     * @param callable(mixed, TValue, TKey): mixed $callback
-     */
-    public function reduce(callable $callback, mixed $initial = null): mixed
-    {
-        $accumulator = $initial;
+		return new self( $filtered );
+	}
 
-        foreach ($this->items as $key => $item) {
-            $accumulator = $callback($accumulator, $item, $key);
-        }
+	/**
+	 * @param callable(mixed, TValue, TKey): mixed $callback
+	 */
+	public function reduce( callable $callback, mixed $initial = null ): mixed {
+		$accumulator = $initial;
 
-        return $accumulator;
-    }
+		foreach ( $this->items as $key => $item ) {
+			$accumulator = $callback( $accumulator, $item, $key );
+		}
 
-    /**
-     * @param callable(TValue, TKey): void $callback
-     */
-    public function each(callable $callback): self
-    {
-        foreach ($this->items as $key => $item) {
-            $callback($item, $key);
-        }
+		return $accumulator;
+	}
 
-        return $this;
-    }
+	/**
+	 * @param callable(TValue, TKey): void $callback
+	 *
+	 * @return self<TKey, TValue>
+	 */
+	public function each( callable $callback ): self {
+		foreach ( $this->items as $key => $item ) {
+			$callback( $item, $key );
+		}
 
-    public function pluck(string $key): self
-    {
-        return $this->map(static fn (mixed $item): mixed => is_array($item) ? Arr::get($item, $key) : null);
-    }
+		return $this;
+	}
 
-    public function values(): self
-    {
-        return new self(array_values($this->items));
-    }
+	/**
+	 * @return self<TKey, mixed>
+	 */
+	public function pluck( string $key ): self {
+		return $this->map( static fn ( mixed $item ): mixed => is_array( $item ) ? Arr::get( $item, $key ) : null );
+	}
 
-    public function keys(): self
-    {
-        return new self(array_keys($this->items));
-    }
+	/**
+	 * @return self<int, TValue>
+	 */
+	public function values(): self {
+		return new self( array_values( $this->items ) );
+	}
 
-    public function first(): mixed
-    {
-        foreach ($this->items as $item) {
-            return $item;
-        }
+	/**
+	 * @return self<int, TKey>
+	 */
+	public function keys(): self {
+		return new self( array_keys( $this->items ) );
+	}
 
-        return null;
-    }
+	public function first(): mixed {
+		foreach ( $this->items as $item ) {
+			return $item;
+		}
 
-    public function last(): mixed
-    {
-        $reversed = array_reverse($this->items, true);
+		return null;
+	}
 
-        foreach ($reversed as $item) {
-            return $item;
-        }
+	public function last(): mixed {
+		$reversed = array_reverse( $this->items, true );
 
-        return null;
-    }
+		foreach ( $reversed as $item ) {
+			return $item;
+		}
 
-    public function sum(?string $key = null): int|float
-    {
-        if ($key === null) {
-            /** @var list<int|float> $items */
-            $items = $this->items;
+		return null;
+	}
 
-            return array_sum($items);
-        }
+	public function sum( ?string $key = null ): int|float {
+		if ( $key === null ) {
+			/** @var list<int|float> $items */
+			$items = $this->items;
 
-        return $this->pluck($key)->sum();
-    }
+			return array_sum( $items );
+		}
 
-    public function sortBy(string $key, bool $descending = false): self
-    {
-        $items = $this->items;
+		return $this->pluck( $key )->sum();
+	}
 
-        usort($items, static function (mixed $a, mixed $b) use ($key): int {
-            $valueA = is_array($a) ? Arr::get($a, $key) : null;
-            $valueB = is_array($b) ? Arr::get($b, $key) : null;
+	/**
+	 * @return self<int, TValue>
+	 */
+	public function sortBy( string $key, bool $descending = false ): self {
+		$items = $this->items;
 
-            return $valueA <=> $valueB;
-        });
+		usort(
+			$items,
+			static function ( mixed $a, mixed $b ) use ( $key ): int {
+				$valueA = is_array( $a ) ? Arr::get( $a, $key ) : null;
+				$valueB = is_array( $b ) ? Arr::get( $b, $key ) : null;
 
-        if ($descending) {
-            $items = array_reverse($items);
-        }
+				return $valueA <=> $valueB;
+			}
+		);
 
-        return new self(array_values($items));
-    }
+		if ( $descending ) {
+			$items = array_reverse( $items );
+		}
 
-    public function isEmpty(): bool
-    {
-        return $this->items === [];
-    }
+		return new self( array_values( $items ) );
+	}
 
-    public function isNotEmpty(): bool
-    {
-        return ! $this->isEmpty();
-    }
+	public function isEmpty(): bool {
+		return $this->items === array();
+	}
 
-    /**
-     * @return array<TKey, TValue>
-     */
-    public function toArray(): array
-    {
-        return $this->items;
-    }
+	public function isNotEmpty(): bool {
+		return ! $this->isEmpty();
+	}
 
-    public function count(): int
-    {
-        return count($this->items);
-    }
+	/**
+	 * @return array<TKey, TValue>
+	 */
+	public function toArray(): array {
+		return $this->items;
+	}
 
-    public function getIterator(): Traversable
-    {
-        return new ArrayIterator($this->items);
-    }
+	public function count(): int {
+		return count( $this->items );
+	}
 
-    public function offsetExists(mixed $offset): bool
-    {
-        return isset($this->items[$offset]);
-    }
+	public function getIterator(): Traversable {
+		return new ArrayIterator( $this->items );
+	}
 
-    public function offsetGet(mixed $offset): mixed
-    {
-        return $this->items[$offset];
-    }
+	public function offsetExists( mixed $offset ): bool {
+		return isset( $this->items[ $offset ] );
+	}
 
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        if ($offset === null) {
-            $this->items[] = $value;
+	public function offsetGet( mixed $offset ): mixed {
+		return $this->items[ $offset ];
+	}
 
-            return;
-        }
+	public function offsetSet( mixed $offset, mixed $value ): void {
+		if ( $offset === null ) {
+			$this->items[] = $value;
 
-        $this->items[$offset] = $value;
-    }
+			return;
+		}
 
-    public function offsetUnset(mixed $offset): void
-    {
-        unset($this->items[$offset]);
-    }
+		$this->items[ $offset ] = $value;
+	}
+
+	public function offsetUnset( mixed $offset ): void {
+		unset( $this->items[ $offset ] );
+	}
 }

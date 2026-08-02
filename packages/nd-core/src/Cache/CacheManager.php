@@ -16,90 +16,81 @@ use NDCore\Config\Config;
  * Punto único de acceso a caché para toda la plataforma. Resuelve el driver
  * activo a partir de `config('cache.driver')` de forma perezosa.
  */
-final class CacheManager
-{
-    private const DEFAULT_TTL = 3600;
+final class CacheManager {
 
-    /**
-     * @var array<string, CacheDriver>
-     */
-    private array $resolvedDrivers = [];
+	private const DEFAULT_TTL = 3600;
 
-    public function __construct(private readonly Config $config)
-    {
-    }
+	/**
+	 * @var array<string, CacheDriver>
+	 */
+	private array $resolvedDrivers = array();
 
-    public function get(string $key, mixed $default = null): mixed
-    {
-        return $this->driver()->get($key, $default);
-    }
+	public function __construct( private readonly Config $config ) {
+	}
 
-    public function put(string $key, mixed $value, ?int $ttlSeconds = null): bool
-    {
-        return $this->driver()->put($key, $value, $ttlSeconds ?? (int) $this->config->get('cache.ttl', self::DEFAULT_TTL));
-    }
+	public function get( string $key, mixed $default = null ): mixed {
+		return $this->driver()->get( $key, $default );
+	}
 
-    public function forget(string $key): bool
-    {
-        return $this->driver()->forget($key);
-    }
+	public function put( string $key, mixed $value, ?int $ttlSeconds = null ): bool {
+		return $this->driver()->put( $key, $value, $ttlSeconds ?? (int) $this->config->get( 'cache.ttl', self::DEFAULT_TTL ) );
+	}
 
-    public function flush(): bool
-    {
-        return $this->driver()->flush();
-    }
+	public function forget( string $key ): bool {
+		return $this->driver()->forget( $key );
+	}
 
-    public function has(string $key): bool
-    {
-        return $this->driver()->has($key);
-    }
+	public function flush(): bool {
+		return $this->driver()->flush();
+	}
 
-    /**
-     * Devuelve el valor cacheado si existe; si no, ejecuta `$callback`, lo
-     * almacena y lo devuelve.
-     */
-    public function remember(string $key, Closure $callback, ?int $ttlSeconds = null): mixed
-    {
-        if ($this->has($key)) {
-            return $this->get($key);
-        }
+	public function has( string $key ): bool {
+		return $this->driver()->has( $key );
+	}
 
-        $value = $callback();
+	/**
+	 * Devuelve el valor cacheado si existe; si no, ejecuta `$callback`, lo
+	 * almacena y lo devuelve.
+	 */
+	public function remember( string $key, Closure $callback, ?int $ttlSeconds = null ): mixed {
+		if ( $this->has( $key ) ) {
+			return $this->get( $key );
+		}
 
-        $this->put($key, $value, $ttlSeconds);
+		$value = $callback();
 
-        return $value;
-    }
+		$this->put( $key, $value, $ttlSeconds );
 
-    public function driver(?string $name = null): CacheDriver
-    {
-        $name ??= (string) $this->config->get('cache.driver', 'transient');
+		return $value;
+	}
 
-        return $this->resolvedDrivers[$name] ??= $this->createDriver($name);
-    }
+	public function driver( ?string $name = null ): CacheDriver {
+		$name ??= (string) $this->config->get( 'cache.driver', 'transient' );
 
-    private function createDriver(string $name): CacheDriver
-    {
-        if ($name === 'transient') {
-            return new TransientCacheDriver();
-        }
+		return $this->resolvedDrivers[ $name ] ??= $this->createDriver( $name );
+	}
 
-        if ($name === 'object-cache') {
-            return new ObjectCacheDriver();
-        }
+	private function createDriver( string $name ): CacheDriver {
+		if ( $name === 'transient' ) {
+			return new TransientCacheDriver();
+		}
 
-        if ($name === 'redis') {
-            $password = $this->config->get('cache.redis.password');
+		if ( $name === 'object-cache' ) {
+			return new ObjectCacheDriver();
+		}
 
-            return new RedisCacheDriver(
-                host: (string) $this->config->get('cache.redis.host', '127.0.0.1'),
-                port: (int) $this->config->get('cache.redis.port', 6379),
-                password: $password === null ? null : (string) $password,
-                database: (int) $this->config->get('cache.redis.database', 0),
-                prefix: (string) $this->config->get('cache.redis.prefix', 'nd_platform:'),
-            );
-        }
+		if ( $name === 'redis' ) {
+			$password = $this->config->get( 'cache.redis.password' );
 
-        throw new InvalidArgumentException(sprintf('Driver de caché desconocido: "%s".', $name));
-    }
+			return new RedisCacheDriver(
+				host: (string) $this->config->get( 'cache.redis.host', '127.0.0.1' ),
+				port: (int) $this->config->get( 'cache.redis.port', 6379 ),
+				password: $password === null ? null : (string) $password,
+				database: (int) $this->config->get( 'cache.redis.database', 0 ),
+				prefix: (string) $this->config->get( 'cache.redis.prefix', 'nd_platform:' ),
+			);
+		}
+
+		throw new InvalidArgumentException( sprintf( 'Driver de caché desconocido: "%s".', $name ) );
+	}
 }

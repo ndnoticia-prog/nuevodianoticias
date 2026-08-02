@@ -10,14 +10,13 @@ namespace NDMedia\Video;
  * los atributos `width`/`height` fijos que devuelve el proveedor. El estilo
  * de `.nd-video-embed` vive en nd-theme (presentación).
  */
-final class ResponsiveEmbedWrapper
-{
-    public function wrap(string $html): string
-    {
-        if ($html === '' || ! str_contains($html, '<iframe')) {
-            return $html;
-        }
+final class ResponsiveEmbedWrapper {
 
-        return '<div class="nd-video-embed">' . $html . '</div>';
-    }
+	public function wrap( string $html ): string {
+		if ( $html === '' || ! str_contains( $html, '<iframe' ) ) {
+			return $html;
+		}
+
+		return '<div class="nd-video-embed">' . $html . '</div>';
+	}
 }

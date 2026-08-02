@@ -10,31 +10,29 @@ use NDBuilder\Renderer;
 use NDCore\Container\Container;
 use PHPUnit\Framework\TestCase;
 
-final class BuilderServiceProviderTest extends TestCase
-{
-    public function test_register_binds_registry_with_default_block_types(): void
-    {
-        $container = new Container();
-        $provider = new BuilderServiceProvider($container);
+final class BuilderServiceProviderTest extends TestCase {
 
-        $provider->register();
+	public function test_register_binds_registry_with_default_block_types(): void {
+		$container = new Container();
+		$provider  = new BuilderServiceProvider( $container );
 
-        /** @var BlockRegistry $registry */
-        $registry = $container->make(BlockRegistry::class);
+		$provider->register();
 
-        self::assertSame(['hero', 'noticias', 'breaking'], $registry->registeredTypes());
-    }
+		/** @var BlockRegistry $registry */
+		$registry = $container->make( BlockRegistry::class );
 
-    public function test_register_binds_renderer_as_singleton(): void
-    {
-        $container = new Container();
-        $provider = new BuilderServiceProvider($container);
+		self::assertSame( array( 'hero', 'noticias', 'breaking' ), $registry->registeredTypes() );
+	}
 
-        $provider->register();
+	public function test_register_binds_renderer_as_singleton(): void {
+		$container = new Container();
+		$provider  = new BuilderServiceProvider( $container );
 
-        $first = $container->make(Renderer::class);
-        $second = $container->make(Renderer::class);
+		$provider->register();
 
-        self::assertSame($first, $second);
-    }
+		$first  = $container->make( Renderer::class );
+		$second = $container->make( Renderer::class );
+
+		self::assertSame( $first, $second );
+	}
 }

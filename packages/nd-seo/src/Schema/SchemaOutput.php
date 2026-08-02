@@ -12,52 +12,52 @@ use NDSeo\Schema\Contracts\SchemaProvider;
  * imprime como un único bloque `<script type="application/ld+json">` con un
  * `@graph`, en lugar de un `<script>` por cada tipo de dato estructurado.
  */
-final class SchemaOutput
-{
-    /**
-     * `JSON_HEX_TAG` es obligatorio aquí: sin él, un título de artículo que
-     * contuviera literalmente "</script>" cerraría el bloque JSON-LD e
-     * inyectaría HTML/JS arbitrario en la página.
-     */
-    private const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
+final class SchemaOutput {
 
-    /**
-     * @param list<SchemaProvider> $providers
-     */
-    public function __construct(
-        private readonly SeoContextResolver $contextResolver,
-        private readonly array $providers,
-    ) {
-    }
+	/**
+	 * `JSON_HEX_TAG` es obligatorio aquí: sin él, un título de artículo que
+	 * contuviera literalmente "</script>" cerraría el bloque JSON-LD e
+	 * inyectaría HTML/JS arbitrario en la página.
+	 */
+	private const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
 
-    public function render(): void
-    {
-        $context = $this->contextResolver->resolve();
-        $graph = [];
+	/**
+	 * @param list<SchemaProvider> $providers
+	 */
+	public function __construct(
+		private readonly SeoContextResolver $contextResolver,
+		private readonly array $providers,
+	) {
+	}
 
-        foreach ($this->providers as $provider) {
-            if (! $provider->supports($context)) {
-                continue;
-            }
+	public function render(): void {
+		$context = $this->contextResolver->resolve();
+		$graph   = array();
 
-            $graph[] = $provider->build($context);
-        }
+		foreach ( $this->providers as $provider ) {
+			if ( ! $provider->supports( $context ) ) {
+				continue;
+			}
 
-        if ($graph === []) {
-            return;
-        }
+			$graph[] = $provider->build( $context );
+		}
 
-        $document = [
-            '@context' => 'https://schema.org',
-            '@graph' => $graph,
-        ];
+		if ( $graph === array() ) {
+			return;
+		}
 
-        $json = wp_json_encode($document, self::JSON_FLAGS);
+		$document = array(
+			'@context' => 'https://schema.org',
+			'@graph'   => $graph,
+		);
 
-        if (! is_string($json)) {
-            return;
-        }
+		$json = wp_json_encode( $document, self::JSON_FLAGS );
 
-        echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
-    }
+		if ( ! is_string( $json ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON-LD ya va codificado con JSON_HEX_TAG|JSON_HEX_AMP (ver docblock de self::JSON_FLAGS); esc_html() rompería el JSON.
+		echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
+	}
 }

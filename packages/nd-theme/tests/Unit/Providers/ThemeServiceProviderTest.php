@@ -10,68 +10,68 @@ use NDTheme\Content\HomeContentProvider;
 use NDTheme\Providers\ThemeServiceProvider;
 use NDTheme\Tests\BrainMonkeyTestCase;
 
-final class ThemeServiceProviderTest extends BrainMonkeyTestCase
-{
-    public function test_register_binds_home_content_provider_as_singleton(): void
-    {
-        $container = new Container();
-        $provider = new ThemeServiceProvider($container);
+final class ThemeServiceProviderTest extends BrainMonkeyTestCase {
 
-        $provider->register();
+	public function test_register_binds_home_content_provider_as_singleton(): void {
+		$container = new Container();
+		$provider  = new ThemeServiceProvider( $container );
 
-        $first = $container->make(HomeContentProvider::class);
-        $second = $container->make(HomeContentProvider::class);
+		$provider->register();
 
-        self::assertSame($first, $second);
-    }
+		$first  = $container->make( HomeContentProvider::class );
+		$second = $container->make( HomeContentProvider::class );
 
-    public function test_setup_theme_registers_theme_supports_and_menus(): void
-    {
-        $container = new Container();
-        $provider = new ThemeServiceProvider($container);
+		self::assertSame( $first, $second );
+	}
 
-        Functions\expect('add_theme_support')->times(5);
-        Functions\expect('register_nav_menus')->once()->with([
-            'primary' => 'Menú principal',
-            'footer' => 'Menú de pie de página',
-        ]);
-        Functions\when('__')->returnArg(1);
+	public function test_setup_theme_registers_theme_supports_and_menus(): void {
+		$container = new Container();
+		$provider  = new ThemeServiceProvider( $container );
 
-        $provider->setupTheme();
+		Functions\expect( 'add_theme_support' )->times( 5 );
+		Functions\expect( 'register_nav_menus' )->once()->with(
+			array(
+				'primary' => 'Menú principal',
+				'footer'  => 'Menú de pie de página',
+			)
+		);
+		Functions\when( '__' )->returnArg( 1 );
 
-        $this->addToAssertionCount(1);
-    }
+		$provider->setupTheme();
 
-    public function test_enqueue_assets_does_nothing_when_build_output_is_missing(): void
-    {
-        $container = new Container();
-        $provider = new ThemeServiceProvider($container);
+		$this->addToAssertionCount( 1 );
+	}
 
-        Functions\expect('file_exists')->twice()->andReturn(false);
-        Functions\expect('wp_enqueue_style')->never();
-        Functions\expect('wp_enqueue_script')->never();
+	public function test_enqueue_assets_does_nothing_when_build_output_is_missing(): void {
+		$container = new Container();
+		$provider  = new ThemeServiceProvider( $container );
 
-        $provider->enqueueAssets();
+		Functions\expect( 'file_exists' )->twice()->andReturn( false );
+		Functions\expect( 'wp_enqueue_style' )->never();
+		Functions\expect( 'wp_enqueue_script' )->never();
 
-        $this->addToAssertionCount(1);
-    }
+		$provider->enqueueAssets();
 
-    public function test_enqueue_assets_enqueues_built_css_and_js_when_present(): void
-    {
-        $container = new Container();
-        $provider = new ThemeServiceProvider($container);
+		$this->addToAssertionCount( 1 );
+	}
 
-        Functions\expect('file_exists')->twice()->andReturn(true);
-        Functions\expect('filemtime')->twice()->andReturn(1700000000);
+	public function test_enqueue_assets_enqueues_built_css_and_js_when_present(): void {
+		$container = new Container();
+		$provider  = new ThemeServiceProvider( $container );
 
-        Functions\expect('wp_enqueue_style')
-            ->once()
-            ->with('nd-theme', ND_THEME_URI . '/dist/app.css', [], '1700000000');
+		Functions\expect( 'file_exists' )->twice()->andReturn( true );
+		Functions\expect( 'filemtime' )->twice()->andReturn( 1700000000 );
 
-        Functions\expect('wp_enqueue_script')
-            ->once()
-            ->with('nd-theme', ND_THEME_URI . '/dist/app.js', [], '1700000000', true);
+		Functions\expect( 'wp_enqueue_style' )
+			->once()
+			->with( 'nd-theme', ND_THEME_URI . '/dist/app.css', array(), '1700000000' );
 
-        $provider->enqueueAssets();
-    }
+		Functions\expect( 'wp_enqueue_script' )
+			->once()
+			->with( 'nd-theme', ND_THEME_URI . '/dist/app.js', array(), '1700000000', true );
+
+		$provider->enqueueAssets();
+
+		$this->addToAssertionCount( 1 );
+	}
 }

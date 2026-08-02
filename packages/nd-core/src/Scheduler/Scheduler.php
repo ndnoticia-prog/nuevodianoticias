@@ -9,61 +9,55 @@ use NDCore\Hooks\HookManager;
 /**
  * Única puerta de entrada de ND Platform hacia WP-Cron.
  */
-final class Scheduler
-{
-    public function __construct(private readonly HookManager $hooks)
-    {
-    }
+final class Scheduler {
 
-    /**
-     * Registra un intervalo de cron personalizado (WordPress solo trae
-     * hourly/twicedaily/daily por defecto).
-     */
-    public function registerSchedule(string $name, int $intervalSeconds, string $display): void
-    {
-        $this->hooks->addFilter(
-            'cron_schedules',
-            static function (array $schedules) use ($name, $intervalSeconds, $display): array {
-                $schedules[$name] = [
-                    'interval' => $intervalSeconds,
-                    'display' => $display,
-                ];
+	public function __construct( private readonly HookManager $hooks ) {
+	}
 
-                return $schedules;
-            }
-        );
-    }
+	/**
+	 * Registra un intervalo de cron personalizado (WordPress solo trae
+	 * hourly/twicedaily/daily por defecto).
+	 */
+	public function registerSchedule( string $name, int $intervalSeconds, string $display ): void {
+		$this->hooks->addFilter(
+			'cron_schedules',
+			static function ( array $schedules ) use ( $name, $intervalSeconds, $display ): array {
+				$schedules[ $name ] = array(
+					'interval' => $intervalSeconds,
+					'display'  => $display,
+				);
 
-    public function scheduleRecurring(string $hook, string $schedule, ?int $startTimestamp = null): bool
-    {
-        if (wp_next_scheduled($hook) !== false) {
-            return true;
-        }
+				return $schedules;
+			}
+		);
+	}
 
-        return wp_schedule_event($startTimestamp ?? time(), $schedule, $hook) !== false;
-    }
+	public function scheduleRecurring( string $hook, string $schedule, ?int $startTimestamp = null ): bool {
+		if ( wp_next_scheduled( $hook ) !== false ) {
+			return true;
+		}
 
-    /**
-     * @param list<mixed> $args
-     */
-    public function scheduleOnce(string $hook, int $timestamp, array $args = []): bool
-    {
-        return wp_schedule_single_event($timestamp, $hook, $args) !== false;
-    }
+		return wp_schedule_event( $startTimestamp ?? time(), $schedule, $hook ) !== false;
+	}
 
-    public function unschedule(string $hook): void
-    {
-        $timestamp = wp_next_scheduled($hook);
+	/**
+	 * @param list<mixed> $args
+	 */
+	public function scheduleOnce( string $hook, int $timestamp, array $args = array() ): bool {
+		return wp_schedule_single_event( $timestamp, $hook, $args ) !== false;
+	}
 
-        if ($timestamp !== false) {
-            wp_unschedule_event($timestamp, $hook);
-        }
+	public function unschedule( string $hook ): void {
+		$timestamp = wp_next_scheduled( $hook );
 
-        wp_clear_scheduled_hook($hook);
-    }
+		if ( $timestamp !== false ) {
+			wp_unschedule_event( $timestamp, $hook );
+		}
 
-    public function isScheduled(string $hook): bool
-    {
-        return wp_next_scheduled($hook) !== false;
-    }
+		wp_clear_scheduled_hook( $hook );
+	}
+
+	public function isScheduled( string $hook ): bool {
+		return wp_next_scheduled( $hook ) !== false;
+	}
 }

@@ -12,7 +12,7 @@
         }
     ],
     "keywords": ["wordpress", "cms", "editorial", "nd-platform"],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
         { "type": "path", "url": "../nd-builder" },

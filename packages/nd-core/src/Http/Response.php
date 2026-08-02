@@ -9,51 +9,47 @@ use JsonException;
 /**
  * Respuesta HTTP inmutable devuelta por {@see Client}.
  */
-final class Response
-{
-    /**
-     * @param array<string, string> $headers
-     */
-    public function __construct(
-        public readonly int $status,
-        public readonly array $headers,
-        public readonly string $body,
-        public readonly bool $isError,
-        public readonly ?string $errorMessage = null,
-    ) {
-    }
+final class Response {
 
-    public function successful(): bool
-    {
-        return ! $this->isError && $this->status >= 200 && $this->status < 300;
-    }
+	/**
+	 * @param array<string, string> $headers
+	 */
+	public function __construct(
+		public readonly int $status,
+		public readonly array $headers,
+		public readonly string $body,
+		public readonly bool $isError,
+		public readonly ?string $errorMessage = null,
+	) {
+	}
 
-    public function failed(): bool
-    {
-        return ! $this->successful();
-    }
+	public function successful(): bool {
+		return ! $this->isError && $this->status >= 200 && $this->status < 300;
+	}
 
-    /**
-     * @return array<mixed>
-     */
-    public function json(): array
-    {
-        if ($this->body === '') {
-            return [];
-        }
+	public function failed(): bool {
+		return ! $this->successful();
+	}
 
-        try {
-            /** @var array<mixed> $decoded */
-            $decoded = json_decode($this->body, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            return [];
-        }
+	/**
+	 * @return array<mixed>
+	 */
+	public function json(): array {
+		if ( $this->body === '' ) {
+			return array();
+		}
 
-        return $decoded;
-    }
+		try {
+			/** @var array<mixed> $decoded */
+			$decoded = json_decode( $this->body, true, 512, JSON_THROW_ON_ERROR );
+		} catch ( JsonException ) {
+			return array();
+		}
 
-    public function header(string $name): ?string
-    {
-        return $this->headers[strtolower($name)] ?? null;
-    }
+		return $decoded;
+	}
+
+	public function header( string $name ): ?string {
+		return $this->headers[ strtolower( $name ) ] ?? null;
+	}
 }

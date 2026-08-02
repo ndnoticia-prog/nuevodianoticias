@@ -10,44 +10,40 @@ use NDBuilder\BlockRegistry;
 use NDBuilder\Contracts\BlockRenderer;
 use PHPUnit\Framework\TestCase;
 
-final class BlockRegistryTestRenderer implements BlockRenderer
-{
-    public function render(Block $block): string
-    {
-        return 'rendered:' . $block->type;
-    }
+final class BlockRegistryTestRenderer implements BlockRenderer {
+
+	public function render( Block $block ): string {
+		return 'rendered:' . $block->type;
+	}
 }
 
-final class BlockRegistryTest extends TestCase
-{
-    public function test_register_and_has(): void
-    {
-        $registry = new BlockRegistry();
+final class BlockRegistryTest extends TestCase {
 
-        self::assertFalse($registry->has('hero'));
+	public function test_register_and_has(): void {
+		$registry = new BlockRegistry();
 
-        $registry->register('hero', new BlockRegistryTestRenderer());
+		self::assertFalse( $registry->has( 'hero' ) );
 
-        self::assertTrue($registry->has('hero'));
-        self::assertSame(['hero'], $registry->registeredTypes());
-    }
+		$registry->register( 'hero', new BlockRegistryTestRenderer() );
 
-    public function test_renderer_for_returns_the_registered_renderer(): void
-    {
-        $registry = new BlockRegistry();
-        $renderer = new BlockRegistryTestRenderer();
+		self::assertTrue( $registry->has( 'hero' ) );
+		self::assertSame( array( 'hero' ), $registry->registeredTypes() );
+	}
 
-        $registry->register('hero', $renderer);
+	public function test_renderer_for_returns_the_registered_renderer(): void {
+		$registry = new BlockRegistry();
+		$renderer = new BlockRegistryTestRenderer();
 
-        self::assertSame($renderer, $registry->rendererFor('hero'));
-    }
+		$registry->register( 'hero', $renderer );
 
-    public function test_renderer_for_unknown_type_throws(): void
-    {
-        $registry = new BlockRegistry();
+		self::assertSame( $renderer, $registry->rendererFor( 'hero' ) );
+	}
 
-        $this->expectException(InvalidArgumentException::class);
+	public function test_renderer_for_unknown_type_throws(): void {
+		$registry = new BlockRegistry();
 
-        $registry->rendererFor('unknown');
-    }
+		$this->expectException( InvalidArgumentException::class );
+
+		$registry->rendererFor( 'unknown' );
+	}
 }

@@ -11,12 +11,56 @@
             "homepage": "https://github.com/ndnoticia-prog"
         }
     ],
-    "keywords": ["wordpress", "cms", "editorial", "nd-platform", "analytics"],
-    "minimum-stability": "stable",
+    "keywords": [
+        "wordpress",
+        "cms",
+        "editorial",
+        "nd-platform",
+        "analytics"
+    ],
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
-        { "type": "path", "url": "../nd-core" },
-        { "type": "path", "url": "../nd-builder" }
+        {
+            "type": "path",
+            "url": "../nd-core"
+        },
+        {
+            "type": "path",
+            "url": "../nd-builder"
+        },
+        {
+            "type": "path",
+            "url": "../nd-seo"
+        },
+        {
+            "type": "path",
+            "url": "../nd-media"
+        },
+        {
+            "type": "path",
+            "url": "../nd-discover"
+        },
+        {
+            "type": "path",
+            "url": "../nd-workflow"
+        },
+        {
+            "type": "path",
+            "url": "../nd-ads"
+        },
+        {
+            "type": "path",
+            "url": "../nd-cache"
+        },
+        {
+            "type": "path",
+            "url": "../nd-search"
+        },
+        {
+            "type": "path",
+            "url": "../nd-ai"
+        }
     ],
     "config": {
         "optimize-autoloader": true,

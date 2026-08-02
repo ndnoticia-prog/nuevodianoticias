@@ -6,29 +6,27 @@ namespace NDAds\Shortcode;
 
 use NDAds\Rendering\AdZoneRenderer;
 
-final class AdShortcode
-{
-    public function __construct(private readonly AdZoneRenderer $zones)
-    {
-    }
+final class AdShortcode {
 
-    /**
-     * @param array<string, mixed>|string $atts
-     */
-    public function render(array|string $atts): string
-    {
-        $atts = shortcode_atts(['zone' => ''], is_array($atts) ? $atts : []);
-        $zone = (string) $atts['zone'];
+	public function __construct( private readonly AdZoneRenderer $zones ) {
+	}
 
-        if ($zone === '') {
-            return '';
-        }
+	/**
+	 * @param array<string, mixed>|string $atts
+	 */
+	public function render( array|string $atts ): string {
+		$atts = shortcode_atts( array( 'zone' => '' ), is_array( $atts ) ? $atts : array() );
+		$zone = (string) $atts['zone'];
 
-        $categorySlugs = array_map(
-            static fn (object $category): string => (string) $category->slug,
-            get_the_category()
-        );
+		if ( $zone === '' ) {
+			return '';
+		}
 
-        return $this->zones->render($zone, $categorySlugs);
-    }
+		$categorySlugs = array_map(
+			static fn ( object $category ): string => (string) $category->slug,
+			get_the_category()
+		);
+
+		return $this->zones->render( $zone, $categorySlugs );
+	}
 }

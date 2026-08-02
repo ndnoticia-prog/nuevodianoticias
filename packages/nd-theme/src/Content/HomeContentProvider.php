@@ -7,6 +7,7 @@ namespace NDTheme\Content;
 use NDBuilder\Block;
 use WP_Post;
 use WP_Query;
+use WP_Term;
 
 /**
  * Traduce contenido real de WordPress (WP_Query) al modelo de datos de
@@ -14,145 +15,156 @@ use WP_Query;
  * nd-theme que decide "qué aparece dónde"; la presentación (HTML) sigue
  * viviendo en `template-parts/blocks/*.php`.
  */
-final class HomeContentProvider
-{
-    private const NOTICIAS_COUNT = 6;
-    private const BREAKING_COUNT = 5;
-    private const DEFAULT_THUMBNAIL_SIZE = 'large';
+final class HomeContentProvider {
 
-    /**
-     * Mismo nombre de tamaño que registra `NDDiscover\ImageSizes::FEATURED`
-     * (>=1200px de ancho, requisito de Google Discover), usado solo para la
-     * imagen del bloque hero. Referenciado como cadena literal a propósito
-     * para no acoplar nd-theme a nd-discover: si el tamaño no existe,
-     * postSummary() recurre a "large".
-     */
-    private const HERO_THUMBNAIL_SIZE = 'nd-discover-featured';
+	private const NOTICIAS_COUNT         = 6;
+	private const BREAKING_COUNT         = 5;
+	private const DEFAULT_THUMBNAIL_SIZE = 'large';
 
-    /**
-     * Categoría usada como marcador editorial de "última hora" hasta que
-     * nd-workflow aporte un estado editorial dedicado.
-     */
-    private const BREAKING_CATEGORY_SLUG = 'ultima-hora';
+	/**
+	 * Mismo nombre de tamaño que registra `NDDiscover\ImageSizes::FEATURED`
+	 * (>=1200px de ancho, requisito de Google Discover), usado solo para la
+	 * imagen del bloque hero. Referenciado como cadena literal a propósito
+	 * para no acoplar nd-theme a nd-discover: si el tamaño no existe,
+	 * postSummary() recurre a "large".
+	 */
+	private const HERO_THUMBNAIL_SIZE = 'nd-discover-featured';
 
-    /**
-     * @return list<Block>
-     */
-    public function blocksForHomepage(): array
-    {
-        $blocks = [];
+	/**
+	 * Categoría usada como marcador editorial de "última hora" hasta que
+	 * nd-workflow aporte un estado editorial dedicado.
+	 */
+	private const BREAKING_CATEGORY_SLUG = 'ultima-hora';
 
-        $breaking = $this->breakingBlock();
+	/**
+	 * @return list<Block>
+	 */
+	public function blocksForHomepage(): array {
+		$blocks = array();
 
-        if ($breaking !== null) {
-            $blocks[] = $breaking;
-        }
+		$breaking = $this->breakingBlock();
 
-        $hero = $this->heroBlock();
-        $excludeId = null;
+		if ( $breaking !== null ) {
+			$blocks[] = $breaking;
+		}
 
-        if ($hero !== null) {
-            $blocks[] = $hero;
-            $excludeId = (int) $hero->attribute('post_id');
-        }
+		$hero      = $this->heroBlock();
+		$excludeId = null;
 
-        $blocks[] = $this->noticiasBlock($excludeId);
+		if ( $hero !== null ) {
+			$blocks[]  = $hero;
+			$excludeId = (int) $hero->attribute( 'post_id' );
+		}
 
-        return $blocks;
-    }
+		$blocks[] = $this->noticiasBlock( $excludeId );
 
-    private function heroBlock(): ?Block
-    {
-        $query = new WP_Query([
-            'post_type' => 'post',
-            'posts_per_page' => 1,
-            'post_status' => 'publish',
-            'ignore_sticky_posts' => true,
-            'no_found_rows' => true,
-        ]);
+		return $blocks;
+	}
 
-        if (! $query->have_posts()) {
-            return null;
-        }
+	private function heroBlock(): ?Block {
+		$query = new WP_Query(
+			array(
+				'post_type'           => 'post',
+				'posts_per_page'      => 1,
+				'post_status'         => 'publish',
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+			)
+		);
 
-        return new Block('hero', 'home-hero', $this->postSummary($query->posts[0], self::HERO_THUMBNAIL_SIZE));
-    }
+		$post = $query->posts[0] ?? null;
 
-    private function noticiasBlock(?int $excludePostId): Block
-    {
-        $args = [
-            'post_type' => 'post',
-            'posts_per_page' => self::NOTICIAS_COUNT,
-            'post_status' => 'publish',
-            'ignore_sticky_posts' => true,
-            'no_found_rows' => true,
-        ];
+		if ( ! $post instanceof WP_Post ) {
+			return null;
+		}
 
-        if ($excludePostId !== null) {
-            $args['post__not_in'] = [$excludePostId];
-        }
+		return new Block( 'hero', 'home-hero', $this->postSummary( $post, self::HERO_THUMBNAIL_SIZE ) );
+	}
 
-        $query = new WP_Query($args);
+	private function noticiasBlock( ?int $excludePostId ): Block {
+		$args = array(
+			'post_type'           => 'post',
+			'posts_per_page'      => self::NOTICIAS_COUNT,
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+		);
 
-        $items = array_map(
-            fn (WP_Post $post): array => $this->postSummary($post),
-            $query->posts
-        );
+		if ( $excludePostId !== null ) {
+			$args['post__not_in'] = array( $excludePostId );
+		}
 
-        return new Block('noticias', 'home-noticias', ['items' => $items]);
-    }
+		$query = new WP_Query( $args );
 
-    private function breakingBlock(): ?Block
-    {
-        $category = get_category_by_slug(self::BREAKING_CATEGORY_SLUG);
+		$posts = array_filter(
+			$query->posts,
+			static fn ( mixed $post ): bool => $post instanceof WP_Post
+		);
 
-        if ($category === false) {
-            return null;
-        }
+		$items = array_map(
+			fn ( WP_Post $post ): array => $this->postSummary( $post ),
+			$posts
+		);
 
-        $query = new WP_Query([
-            'post_type' => 'post',
-            'posts_per_page' => self::BREAKING_COUNT,
-            'post_status' => 'publish',
-            'category__in' => [$category->term_id],
-            'ignore_sticky_posts' => true,
-            'no_found_rows' => true,
-        ]);
+		return new Block( 'noticias', 'home-noticias', array( 'items' => $items ) );
+	}
 
-        if (! $query->have_posts()) {
-            return null;
-        }
+	private function breakingBlock(): ?Block {
+		$category = get_category_by_slug( self::BREAKING_CATEGORY_SLUG );
 
-        $items = array_map(
-            static fn (WP_Post $post): array => [
-                'title' => get_the_title($post),
-                'permalink' => (string) get_permalink($post),
-            ],
-            $query->posts
-        );
+		if ( ! $category instanceof WP_Term ) {
+			return null;
+		}
 
-        return new Block('breaking', 'home-breaking', ['items' => $items]);
-    }
+		$query = new WP_Query(
+			array(
+				'post_type'           => 'post',
+				'posts_per_page'      => self::BREAKING_COUNT,
+				'post_status'         => 'publish',
+				'category__in'        => array( $category->term_id ),
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+			)
+		);
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function postSummary(WP_Post $post, string $thumbnailSize = self::DEFAULT_THUMBNAIL_SIZE): array
-    {
-        $thumbnail = get_the_post_thumbnail_url($post, $thumbnailSize);
+		$posts = array_filter(
+			$query->posts,
+			static fn ( mixed $post ): bool => $post instanceof WP_Post
+		);
 
-        if ($thumbnail === false && $thumbnailSize !== self::DEFAULT_THUMBNAIL_SIZE) {
-            $thumbnail = get_the_post_thumbnail_url($post, self::DEFAULT_THUMBNAIL_SIZE);
-        }
+		if ( $posts === array() ) {
+			return null;
+		}
 
-        return [
-            'post_id' => $post->ID,
-            'title' => get_the_title($post),
-            'excerpt' => get_the_excerpt($post),
-            'permalink' => (string) get_permalink($post),
-            'thumbnail' => $thumbnail === false ? null : $thumbnail,
-            'author' => get_the_author_meta('display_name', (int) $post->post_author),
-            'date' => get_the_date('', $post),
-        ];
-    }
+		$items = array_map(
+			static fn ( WP_Post $post ): array => array(
+				'title'     => get_the_title( $post ),
+				'permalink' => (string) get_permalink( $post ),
+			),
+			$posts
+		);
+
+		return new Block( 'breaking', 'home-breaking', array( 'items' => $items ) );
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function postSummary( WP_Post $post, string $thumbnailSize = self::DEFAULT_THUMBNAIL_SIZE ): array {
+		$thumbnail = get_the_post_thumbnail_url( $post, $thumbnailSize );
+
+		if ( $thumbnail === false && $thumbnailSize !== self::DEFAULT_THUMBNAIL_SIZE ) {
+			$thumbnail = get_the_post_thumbnail_url( $post, self::DEFAULT_THUMBNAIL_SIZE );
+		}
+
+		return array(
+			'post_id'   => $post->ID,
+			'title'     => get_the_title( $post ),
+			'excerpt'   => get_the_excerpt( $post ),
+			'permalink' => (string) get_permalink( $post ),
+			'thumbnail' => $thumbnail === false ? null : $thumbnail,
+			'author'    => get_the_author_meta( 'display_name', (int) $post->post_author ),
+			'date'      => get_the_date( '', $post ),
+		);
+	}
 }

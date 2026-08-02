@@ -13,40 +13,36 @@ use WP_Query;
  * FULLTEXT propio — sin tocar `get_search_query()`/`is_search()` (que
  * siguen funcionando con normalidad para la plantilla de resultados).
  */
-final class SearchQueryOverride
-{
-    public function __construct(private readonly SearchIndexRepository $repository)
-    {
-    }
+final class SearchQueryOverride {
 
-    public function overridePostIds(WP_Query $query): void
-    {
-        if ($this->shouldSkip($query)) {
-            return;
-        }
+	public function __construct( private readonly SearchIndexRepository $repository ) {
+	}
 
-        $postIds = $this->repository->search((string) $query->get('s'));
+	public function overridePostIds( WP_Query $query ): void {
+		if ( $this->shouldSkip( $query ) ) {
+			return;
+		}
 
-        $query->set('post__in', $postIds === [] ? [0] : $postIds);
-        $query->set('orderby', 'post__in');
-    }
+		$postIds = $this->repository->search( (string) $query->get( 's' ) );
 
-    /**
-     * `posts_search` es el filtro que genera la cláusula SQL de
-     * título/contenido a partir de "s"; devolverlo vacío evita que WordPress
-     * añada su propio LIKE por encima del post__in ya acotado (que además
-     * podría excluir resultados que el FULLTEXT sí considera relevantes).
-     */
-    public function neutralizeDefaultSearchSql(string $search, WP_Query $query): string
-    {
-        return $this->shouldSkip($query) ? $search : '';
-    }
+		$query->set( 'post__in', $postIds === array() ? array( 0 ) : $postIds );
+		$query->set( 'orderby', 'post__in' );
+	}
 
-    private function shouldSkip(WP_Query $query): bool
-    {
-        return ! $query->is_search()
-            || ! $query->is_main_query()
-            || is_admin()
-            || trim((string) $query->get('s')) === '';
-    }
+	/**
+	 * `posts_search` es el filtro que genera la cláusula SQL de
+	 * título/contenido a partir de "s"; devolverlo vacío evita que WordPress
+	 * añada su propio LIKE por encima del post__in ya acotado (que además
+	 * podría excluir resultados que el FULLTEXT sí considera relevantes).
+	 */
+	public function neutralizeDefaultSearchSql( string $search, WP_Query $query ): string {
+		return $this->shouldSkip( $query ) ? $search : '';
+	}
+
+	private function shouldSkip( WP_Query $query ): bool {
+		return ! $query->is_search()
+			|| ! $query->is_main_query()
+			|| is_admin()
+			|| trim( (string) $query->get( 's' ) ) === '';
+	}
 }

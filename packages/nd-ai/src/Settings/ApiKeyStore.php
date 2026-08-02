@@ -13,40 +13,37 @@ use RuntimeException;
  * NDCore\Security\Encryption: nunca se guardan en texto plano en
  * wp_options.
  */
-final class ApiKeyStore
-{
-    public function __construct(
-        private readonly SettingsRepository $settings,
-        private readonly Encryption $encryption,
-    ) {
-    }
+final class ApiKeyStore {
 
-    public function get(string $provider): string
-    {
-        $encrypted = $this->settings->get($this->settingKey($provider));
+	public function __construct(
+		private readonly SettingsRepository $settings,
+		private readonly Encryption $encryption,
+	) {
+	}
 
-        if (! is_string($encrypted) || $encrypted === '') {
-            return '';
-        }
+	public function get( string $provider ): string {
+		$encrypted = $this->settings->get( $this->settingKey( $provider ) );
 
-        try {
-            return $this->encryption->decrypt($encrypted);
-        } catch (RuntimeException) {
-            return '';
-        }
-    }
+		if ( ! is_string( $encrypted ) || $encrypted === '' ) {
+			return '';
+		}
 
-    public function set(string $provider, string $apiKey): bool
-    {
-        if ($apiKey === '') {
-            return $this->settings->forget($this->settingKey($provider));
-        }
+		try {
+			return $this->encryption->decrypt( $encrypted );
+		} catch ( RuntimeException ) {
+			return '';
+		}
+	}
 
-        return $this->settings->set($this->settingKey($provider), $this->encryption->encrypt($apiKey), false);
-    }
+	public function set( string $provider, string $apiKey ): bool {
+		if ( $apiKey === '' ) {
+			return $this->settings->forget( $this->settingKey( $provider ) );
+		}
 
-    private function settingKey(string $provider): string
-    {
-        return 'ai_api_key_' . $provider;
-    }
+		return $this->settings->set( $this->settingKey( $provider ), $this->encryption->encrypt( $apiKey ), false );
+	}
+
+	private function settingKey( string $provider ): string {
+		return 'ai_api_key_' . $provider;
+	}
 }

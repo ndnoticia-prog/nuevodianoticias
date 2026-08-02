@@ -12,32 +12,29 @@ use NDCore\Config\Config;
  * (mismo driver que ya elija el sitio: transient/object-cache/redis) en
  * lugar de implementar su propio backend de almacenamiento.
  */
-final class PageCacheStore
-{
-    private const DEFAULT_TTL = 3600;
+final class PageCacheStore {
 
-    public function __construct(
-        private readonly CacheManager $cache,
-        private readonly Config $config,
-    ) {
-    }
+	private const DEFAULT_TTL = 3600;
 
-    public function get(string $key): ?string
-    {
-        $value = $this->cache->get($key);
+	public function __construct(
+		private readonly CacheManager $cache,
+		private readonly Config $config,
+	) {
+	}
 
-        return is_string($value) ? $value : null;
-    }
+	public function get( string $key ): ?string {
+		$value = $this->cache->get( $key );
 
-    public function put(string $key, string $html): bool
-    {
-        $ttl = (int) $this->config->get('cache.page_cache.ttl', self::DEFAULT_TTL);
+		return is_string( $value ) ? $value : null;
+	}
 
-        return $this->cache->put($key, $html, $ttl);
-    }
+	public function put( string $key, string $html ): bool {
+		$ttl = (int) $this->config->get( 'cache.page_cache.ttl', self::DEFAULT_TTL );
 
-    public function forget(string $key): bool
-    {
-        return $this->cache->forget($key);
-    }
+		return $this->cache->put( $key, $html, $ttl );
+	}
+
+	public function forget( string $key ): bool {
+		return $this->cache->forget( $key );
+	}
 }

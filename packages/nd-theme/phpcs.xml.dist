@@ -15,12 +15,52 @@
 
     <rule ref="WordPress-Extra">
         <exclude name="WordPress.Files.FileName"/>
-    </rule>
-    <rule ref="WordPress.NamingConventions.ValidVariableName">
-        <exclude-pattern>src/*</exclude-pattern>
+        <!--
+        Este monorepo usa PSR-12 (camelCase) en todo el código orientado a
+        objetos, tal como exige la especificación del proyecto; WPCS asume
+        el estilo snake_case procedural clásico de WordPress core/temas.
+        Se desactivan aquí en vez de renombrar cientos de símbolos públicos.
+        -->
+        <exclude name="WordPress.NamingConventions.ValidFunctionName"/>
+        <exclude name="WordPress.NamingConventions.ValidVariableName"/>
+        <!--
+        Yoda conditions es una convención puramente estilística heredada de
+        WordPress core; no aporta seguridad ni corrección en código moderno
+        con tipos estrictos y no forma parte de PSR-12.
+        -->
+        <exclude name="WordPress.PHP.YodaConditions"/>
+        <!--
+        Falso positivo conocido: la sniff marca cualquier sprintf()/printf()
+        no escapado, incluso cuando su resultado se usa únicamente como
+        mensaje de una excepción interna (nunca se imprime al navegador).
+        -->
+        <exclude name="WordPress.Security.EscapeOutput.ExceptionNotEscaped"/>
+        <!--
+        $default, $namespace, $abstract, $class y $array son nombres de
+        parámetro idiomáticos y perfectamente válidos en PHP 7+ (solo son
+        palabras reservadas como tokens de lenguaje, no como identificadores);
+        forzar alternativas menos descriptivas no aporta nada.
+        -->
+        <exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames"/>
     </rule>
     <rule ref="PHPCompatibilityWP"/>
     <rule ref="Generic.Arrays.DisallowShortArraySyntax.Found">
         <severity>0</severity>
+    </rule>
+    <!--
+    Los tests unitarios (Brain Monkey, sin WordPress real) crean/limpian
+    ficheros temporales de fixtures; WP_Filesystem no está disponible ni es
+    apropiado fuera de un request real de WordPress.
+    -->
+    <rule ref="WordPress.WP.AlternativeFunctions">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+    <!--
+    Los tests colocan pequeños dobles de prueba (fixtures, listeners falsos)
+    junto a la clase de test en el mismo archivo por localidad; es una
+    práctica estándar de PHPUnit, distinta de mezclar clases de producción.
+    -->
+    <rule ref="Generic.Files.OneObjectStructurePerFile">
+        <exclude-pattern>tests/*</exclude-pattern>
     </rule>
 </ruleset>

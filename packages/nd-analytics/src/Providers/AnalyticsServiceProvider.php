@@ -16,42 +16,52 @@ use NDAnalytics\Tracking\ImpressionRecorder;
 use NDAnalytics\Tracking\PageviewRecorder;
 use NDAnalytics\Tracking\VisitorHasher;
 
-final class AnalyticsServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->container->singleton(VisitorHasher::class);
-        $this->container->singleton(PageviewRecorder::class);
-        $this->container->singleton(ImpressionRecorder::class);
-        $this->container->singleton(AnalyticsRepository::class);
-        $this->container->singleton(AnalyticsController::class);
-    }
+final class AnalyticsServiceProvider extends ServiceProvider {
 
-    public function boot(): void
-    {
-        /** @var HookManager $hooks */
-        $hooks = $this->container->make(HookManager::class);
+	public function register(): void {
+		$this->container->singleton( VisitorHasher::class );
+		$this->container->singleton( PageviewRecorder::class );
+		$this->container->singleton( ImpressionRecorder::class );
+		$this->container->singleton( AnalyticsRepository::class );
+		$this->container->singleton( AnalyticsController::class );
+	}
 
-        /** @var EventDispatcher $events */
-        $events = $this->container->make(EventDispatcher::class);
+	public function boot(): void {
+		/** @var HookManager $hooks */
+		$hooks = $this->container->make( HookManager::class );
 
-        $hooks->addAction('wp', function (): void {
-            $this->container->make(PageviewRecorder::class)->recordForCurrentRequest();
-        });
+		/** @var EventDispatcher $events */
+		$events = $this->container->make( EventDispatcher::class );
 
-        $events->listen(BlockRendered::class, function (BlockRendered $event): void {
-            $this->container->make(ImpressionRecorder::class)->handle($event);
-        });
+		$hooks->addAction(
+			'wp',
+			function (): void {
+				/** @var PageviewRecorder $recorder */
+				$recorder = $this->container->make( PageviewRecorder::class );
+				$recorder->recordForCurrentRequest();
+			}
+		);
 
-        $hooks->addFilter('nd_core/rest_controllers', static function (array $controllers): array {
-            $controllers[] = AnalyticsController::class;
+		$events->listen(
+			BlockRendered::class,
+			function ( BlockRendered $event ): void {
+				/** @var ImpressionRecorder $recorder */
+				$recorder = $this->container->make( ImpressionRecorder::class );
+				$recorder->handle( $event );
+			}
+		);
 
-            return $controllers;
-        });
-    }
+		$hooks->addFilter(
+			'nd_core/rest_controllers',
+			static function ( array $controllers ): array {
+				$controllers[] = AnalyticsController::class;
 
-    public function migrations(): array
-    {
-        return [CreatePageviewsTable::class, CreateImpressionsTable::class];
-    }
+				return $controllers;
+			}
+		);
+	}
+
+	public function migrations(): array {
+		return array( CreatePageviewsTable::class, CreateImpressionsTable::class );
+	}
 }

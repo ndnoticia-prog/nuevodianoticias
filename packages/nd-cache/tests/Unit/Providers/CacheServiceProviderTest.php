@@ -12,19 +12,18 @@ use NDCore\Config\Config;
 use NDCore\Container\Container;
 use PHPUnit\Framework\TestCase;
 
-final class CacheServiceProviderTest extends TestCase
-{
-    public function test_register_binds_all_services_and_loads_config(): void
-    {
-        $container = new Container();
-        $config = new Config();
-        $container->instance(Config::class, $config);
+final class CacheServiceProviderTest extends TestCase {
 
-        (new CacheServiceProvider($container))->register();
+	public function test_register_binds_all_services_and_loads_config(): void {
+		$container = new Container();
+		$config    = new Config();
+		$container->instance( Config::class, $config );
 
-        self::assertInstanceOf(PageCacheStore::class, $container->make(PageCacheStore::class));
-        self::assertInstanceOf(PageCacheMiddleware::class, $container->make(PageCacheMiddleware::class));
-        self::assertInstanceOf(CacheInvalidator::class, $container->make(CacheInvalidator::class));
-        self::assertTrue($config->get('cache.page_cache.enabled'));
-    }
+		( new CacheServiceProvider( $container ) )->register();
+
+		self::assertInstanceOf( PageCacheStore::class, $container->make( PageCacheStore::class ) );
+		self::assertInstanceOf( PageCacheMiddleware::class, $container->make( PageCacheMiddleware::class ) );
+		self::assertInstanceOf( CacheInvalidator::class, $container->make( CacheInvalidator::class ) );
+		self::assertTrue( $config->get( 'cache.page_cache.enabled' ) );
+	}
 }

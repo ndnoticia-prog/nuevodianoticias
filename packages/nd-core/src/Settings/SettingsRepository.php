@@ -10,29 +10,25 @@ use stdClass;
  * Envuelve `wp_options` bajo un prefijo propio (`nd_`), evitando colisiones
  * con otros plugins y centralizando el control de `autoload`.
  */
-final class SettingsRepository
-{
-    private const OPTION_PREFIX = 'nd_';
+final class SettingsRepository {
 
-    public function get(string $key, mixed $default = null): mixed
-    {
-        return get_option(self::OPTION_PREFIX . $key, $default);
-    }
+	private const OPTION_PREFIX = 'nd_';
 
-    public function set(string $key, mixed $value, bool $autoload = true): bool
-    {
-        return update_option(self::OPTION_PREFIX . $key, $value, $autoload);
-    }
+	public function get( string $key, mixed $default = null ): mixed {
+		return get_option( self::OPTION_PREFIX . $key, $default );
+	}
 
-    public function forget(string $key): bool
-    {
-        return delete_option(self::OPTION_PREFIX . $key);
-    }
+	public function set( string $key, mixed $value, bool $autoload = true ): bool {
+		return update_option( self::OPTION_PREFIX . $key, $value, $autoload );
+	}
 
-    public function has(string $key): bool
-    {
-        $sentinel = new stdClass();
+	public function forget( string $key ): bool {
+		return delete_option( self::OPTION_PREFIX . $key );
+	}
 
-        return $this->get($key, $sentinel) !== $sentinel;
-    }
+	public function has( string $key ): bool {
+		$sentinel = new stdClass();
+
+		return $this->get( $key, $sentinel ) !== $sentinel;
+	}
 }

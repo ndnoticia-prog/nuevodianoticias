@@ -11,20 +11,22 @@ use NDSeo\Context\SeoContext;
  * siempre que la página es indexable: es un requisito técnico de elegibilidad
  * para Google Discover.
  */
-final class RobotsMetaBuilder
-{
-    public function build(SeoContext $context): string
-    {
-        if ($context->noindex) {
-            return 'noindex, nofollow';
-        }
+final class RobotsMetaBuilder {
 
-        return implode(', ', [
-            'index',
-            'follow',
-            'max-image-preview:large',
-            'max-snippet:-1',
-            'max-video-preview:-1',
-        ]);
-    }
+	public function build( SeoContext $context ): string {
+		if ( $context->noindex ) {
+			return 'noindex, nofollow';
+		}
+
+		return implode(
+			', ',
+			array(
+				'index',
+				'follow',
+				'max-image-preview:large',
+				'max-snippet:-1',
+				'max-video-preview:-1',
+			)
+		);
+	}
 }

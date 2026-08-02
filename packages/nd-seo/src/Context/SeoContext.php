@@ -12,17 +12,17 @@ use WP_Post;
  * Schema.org y breadcrumbs para no repetir la misma lógica de resolución de
  * WordPress en cada uno.
  */
-final class SeoContext
-{
-    public function __construct(
-        public readonly string $title,
-        public readonly string $description,
-        public readonly string $canonicalUrl,
-        public readonly ?string $imageUrl,
-        public readonly string $type,
-        public readonly bool $isSingular,
-        public readonly bool $noindex,
-        public readonly ?WP_Post $post = null,
-    ) {
-    }
+final class SeoContext {
+
+	public function __construct(
+		public readonly string $title,
+		public readonly string $description,
+		public readonly string $canonicalUrl,
+		public readonly ?string $imageUrl,
+		public readonly string $type,
+		public readonly bool $isSingular,
+		public readonly bool $noindex,
+		public readonly ?WP_Post $post = null,
+	) {
+	}
 }

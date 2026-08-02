@@ -10,87 +10,84 @@ namespace NDCore\Config;
  * Cada archivo `config/{nombre}.php` que devuelve un array PHP se carga bajo
  * la clave de nivel superior `{nombre}` (p. ej. `config/cache.php` → `cache.*`).
  */
-final class Config
-{
-    /**
-     * @param array<string, mixed> $items
-     */
-    public function __construct(private array $items = [])
-    {
-    }
+final class Config {
 
-    /**
-     * Carga todos los archivos `*.php` de un directorio como namespaces de configuración.
-     */
-    public function loadDirectory(string $directory): void
-    {
-        $directory = rtrim($directory, '/');
+	/**
+	 * @param array<string, mixed> $items
+	 */
+	public function __construct( private array $items = array() ) {
+	}
 
-        if (! is_dir($directory)) {
-            return;
-        }
+	/**
+	 * Carga todos los archivos `*.php` de un directorio como namespaces de configuración.
+	 */
+	public function loadDirectory( string $directory ): void {
+		$directory = rtrim( $directory, '/' );
 
-        foreach (glob($directory . '/*.php') ?: [] as $file) {
-            $key = basename($file, '.php');
-            $value = require $file;
+		if ( ! is_dir( $directory ) ) {
+			return;
+		}
 
-            if (! is_array($value)) {
-                continue;
-            }
+		$files = glob( $directory . '/*.php' );
+		$files = $files !== false ? $files : array();
 
-            $this->items[$key] = isset($this->items[$key]) && is_array($this->items[$key])
-                ? array_replace_recursive($this->items[$key], $value)
-                : $value;
-        }
-    }
+		foreach ( $files as $file ) {
+			$key   = basename( $file, '.php' );
+			$value = require $file;
 
-    public function get(string $key, mixed $default = null): mixed
-    {
-        if (array_key_exists($key, $this->items)) {
-            return $this->items[$key];
-        }
+			if ( ! is_array( $value ) ) {
+				continue;
+			}
 
-        $segments = explode('.', $key);
-        $value = $this->items;
+			$this->items[ $key ] = isset( $this->items[ $key ] ) && is_array( $this->items[ $key ] )
+				? array_replace_recursive( $this->items[ $key ], $value )
+				: $value;
+		}
+	}
 
-        foreach ($segments as $segment) {
-            if (! is_array($value) || ! array_key_exists($segment, $value)) {
-                return $default;
-            }
+	public function get( string $key, mixed $default = null ): mixed {
+		if ( array_key_exists( $key, $this->items ) ) {
+			return $this->items[ $key ];
+		}
 
-            $value = $value[$segment];
-        }
+		$segments = explode( '.', $key );
+		$value    = $this->items;
 
-        return $value;
-    }
+		foreach ( $segments as $segment ) {
+			if ( ! is_array( $value ) || ! array_key_exists( $segment, $value ) ) {
+				return $default;
+			}
 
-    public function set(string $key, mixed $value): void
-    {
-        $segments = explode('.', $key);
-        $lastSegment = array_pop($segments);
-        $target = &$this->items;
+			$value = $value[ $segment ];
+		}
 
-        foreach ($segments as $segment) {
-            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
-                $target[$segment] = [];
-            }
+		return $value;
+	}
 
-            $target = &$target[$segment];
-        }
+	public function set( string $key, mixed $value ): void {
+		$segments    = explode( '.', $key );
+		$lastSegment = array_pop( $segments );
+		$target      = &$this->items;
 
-        $target[$lastSegment] = $value;
-    }
+		foreach ( $segments as $segment ) {
+			if ( ! isset( $target[ $segment ] ) || ! is_array( $target[ $segment ] ) ) {
+				$target[ $segment ] = array();
+			}
 
-    public function has(string $key): bool
-    {
-        return $this->get($key, $this) !== $this;
-    }
+			$target = &$target[ $segment ];
+		}
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function all(): array
-    {
-        return $this->items;
-    }
+		$target[ $lastSegment ] = $value;
+	}
+
+	public function has( string $key ): bool {
+		return $this->get( $key, $this ) !== $this;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function all(): array {
+		return $this->items;
+	}
 }

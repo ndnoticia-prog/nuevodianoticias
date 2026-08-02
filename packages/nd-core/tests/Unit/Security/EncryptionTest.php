@@ -8,60 +8,54 @@ use NDCore\Security\Encryption;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-final class EncryptionTest extends TestCase
-{
-    protected function setUp(): void
-    {
-        parent::setUp();
+final class EncryptionTest extends TestCase {
 
-        if (! extension_loaded('sodium')) {
-            self::markTestSkipped('La extensión "sodium" no está disponible en este entorno.');
-        }
-    }
+	protected function setUp(): void {
+		parent::setUp();
 
-    public function test_encrypt_then_decrypt_round_trip(): void
-    {
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
+		if ( ! extension_loaded( 'sodium' ) ) {
+			self::markTestSkipped( 'La extensión "sodium" no está disponible en este entorno.' );
+		}
+	}
 
-        $ciphertext = $encryption->encrypt('sk-clave-secreta-de-un-proveedor-de-ia');
+	public function test_encrypt_then_decrypt_round_trip(): void {
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
 
-        self::assertNotSame('sk-clave-secreta-de-un-proveedor-de-ia', $ciphertext);
-        self::assertSame('sk-clave-secreta-de-un-proveedor-de-ia', $encryption->decrypt($ciphertext));
-    }
+		$ciphertext = $encryption->encrypt( 'sk-clave-secreta-de-un-proveedor-de-ia' );
 
-    public function test_two_encryptions_of_the_same_value_differ(): void
-    {
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
+		self::assertNotSame( 'sk-clave-secreta-de-un-proveedor-de-ia', $ciphertext );
+		self::assertSame( 'sk-clave-secreta-de-un-proveedor-de-ia', $encryption->decrypt( $ciphertext ) );
+	}
 
-        $first = $encryption->encrypt('mismo-valor');
-        $second = $encryption->encrypt('mismo-valor');
+	public function test_two_encryptions_of_the_same_value_differ(): void {
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
 
-        self::assertNotSame($first, $second, 'El nonce aleatorio debe producir ciphertexts distintos.');
-    }
+		$first  = $encryption->encrypt( 'mismo-valor' );
+		$second = $encryption->encrypt( 'mismo-valor' );
 
-    public function test_constructor_rejects_key_with_wrong_length(): void
-    {
-        $this->expectException(RuntimeException::class);
+		self::assertNotSame( $first, $second, 'El nonce aleatorio debe producir ciphertexts distintos.' );
+	}
 
-        new Encryption('clave-demasiado-corta');
-    }
+	public function test_constructor_rejects_key_with_wrong_length(): void {
+		$this->expectException( RuntimeException::class );
 
-    public function test_decrypt_rejects_corrupted_payload(): void
-    {
-        $encryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
+		new Encryption( 'clave-demasiado-corta' );
+	}
 
-        $this->expectException(RuntimeException::class);
+	public function test_decrypt_rejects_corrupted_payload(): void {
+		$encryption = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
 
-        $encryption->decrypt(base64_encode('esto-no-es-un-payload-valido'));
-    }
+		$this->expectException( RuntimeException::class );
 
-    public function test_decrypt_fails_with_a_different_key(): void
-    {
-        $encryptedWithFirstKey = (new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES)))->encrypt('secreto');
-        $otherEncryption = new Encryption(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
+		$encryption->decrypt( base64_encode( 'esto-no-es-un-payload-valido' ) );
+	}
 
-        $this->expectException(RuntimeException::class);
+	public function test_decrypt_fails_with_a_different_key(): void {
+		$encryptedWithFirstKey = ( new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) ) )->encrypt( 'secreto' );
+		$otherEncryption       = new Encryption( random_bytes( SODIUM_CRYPTO_SECRETBOX_KEYBYTES ) );
 
-        $otherEncryption->decrypt($encryptedWithFirstKey);
-    }
+		$this->expectException( RuntimeException::class );
+
+		$otherEncryption->decrypt( $encryptedWithFirstKey );
+	}
 }

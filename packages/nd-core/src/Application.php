@@ -30,157 +30,149 @@ use Psr\Container\ContainerInterface;
  * registro y arranque de los `ServiceProvider` de todos los paquetes
  * instalados.
  */
-final class Application extends Container
-{
-    private static ?self $instance = null;
+final class Application extends Container {
 
-    private bool $booted = false;
+	private static ?self $instance = null;
 
-    /**
-     * @var list<ServiceProvider>
-     */
-    private array $loadedProviders = [];
+	private bool $booted = false;
 
-    public static function getInstance(): self
-    {
-        return self::$instance ??= new self();
-    }
+	/**
+	 * @var list<ServiceProvider>
+	 */
+	private array $loadedProviders = array();
 
-    /**
-     * Restablece la instancia singleton. Únicamente pensado para aislar
-     * pruebas entre sí; no debe usarse en tiempo de ejecución de WordPress.
-     */
-    public static function flush(): void
-    {
-        self::$instance = null;
-    }
+	public static function getInstance(): self {
+		return self::$instance ??= new self();
+	}
 
-    private function __construct()
-    {
-        $this->instance(self::class, $this);
-        $this->instance(Container::class, $this);
-        $this->instance(ContainerInterface::class, $this);
-    }
+	/**
+	 * Restablece la instancia singleton. Únicamente pensado para aislar
+	 * pruebas entre sí; no debe usarse en tiempo de ejecución de WordPress.
+	 */
+	public static function flush(): void {
+		self::$instance = null;
+	}
 
-    public function boot(): void
-    {
-        if ($this->booted) {
-            return;
-        }
+	private function __construct() {
+		$this->instance( self::class, $this );
+		$this->instance( Container::class, $this );
+		$this->instance( ContainerInterface::class, $this );
+	}
 
-        $config = new Config();
-        $config->loadDirectory($this->configDirectory());
-        $this->instance(Config::class, $config);
+	public function boot(): void {
+		if ( $this->booted ) {
+			return;
+		}
 
-        $hooks = new HookManager();
-        $this->instance(HookManager::class, $hooks);
+		$config = new Config();
+		$config->loadDirectory( $this->configDirectory() );
+		$this->instance( Config::class, $config );
 
-        $events = new EventDispatcher($this);
-        $this->instance(EventDispatcher::class, $events);
+		$hooks = new HookManager();
+		$this->instance( HookManager::class, $hooks );
 
-        foreach ($this->resolveProviderClasses($config, $hooks) as $providerClass) {
-            /** @var ServiceProvider $provider */
-            $provider = new $providerClass($this);
-            $provider->register();
-            $this->loadedProviders[] = $provider;
-        }
+		$events = new EventDispatcher( $this );
+		$this->instance( EventDispatcher::class, $events );
 
-        foreach ($this->loadedProviders as $provider) {
-            $provider->boot();
-        }
+		foreach ( $this->resolveProviderClasses( $config, $hooks ) as $providerClass ) {
+			/** @var ServiceProvider $provider */
+			$provider = new $providerClass( $this );
+			$provider->register();
+			$this->loadedProviders[] = $provider;
+		}
 
-        $this->booted = true;
+		foreach ( $this->loadedProviders as $provider ) {
+			$provider->boot();
+		}
 
-        $hooks->doAction('nd_core/booted', $this);
-    }
+		$this->booted = true;
 
-    public function isBooted(): bool
-    {
-        return $this->booted;
-    }
+		$hooks->doAction( 'nd_core/booted', $this );
+	}
 
-    /**
-     * @return list<ServiceProvider>
-     */
-    public function providers(): array
-    {
-        return $this->loadedProviders;
-    }
+	public function isBooted(): bool {
+		return $this->booted;
+	}
 
-    /**
-     * Resuelve `config/` de forma independiente de las constantes que define
-     * el archivo principal del plugin, para seguir funcionando en contextos
-     * donde ese archivo no se incluye (p. ej. `uninstall.php`).
-     */
-    private function configDirectory(): string
-    {
-        return dirname(__DIR__) . '/config';
-    }
+	/**
+	 * @return list<ServiceProvider>
+	 */
+	public function providers(): array {
+		return $this->loadedProviders;
+	}
 
-    /**
-     * @return list<class-string<ServiceProvider>>
-     */
-    private function resolveProviderClasses(Config $config, HookManager $hooks): array
-    {
-        $default = [
-            CoreServiceProvider::class,
-            RoutingServiceProvider::class,
-            RestApiServiceProvider::class,
-        ];
+	/**
+	 * Resuelve `config/` de forma independiente de las constantes que define
+	 * el archivo principal del plugin, para seguir funcionando en contextos
+	 * donde ese archivo no se incluye (p. ej. `uninstall.php`).
+	 */
+	private function configDirectory(): string {
+		return dirname( __DIR__ ) . '/config';
+	}
 
-        // nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads,
-        // nd-analytics, nd-cache, nd-search y nd-ai vienen empaquetados dentro
-        // del vendor/ de nd-core (ver composer.json), por eso se registran aquí
-        // en lugar de requerir que cada tema/paquete lo haga.
-        if (class_exists(BuilderServiceProvider::class)) {
-            $default[] = BuilderServiceProvider::class;
-        }
+	/**
+	 * @return list<class-string<ServiceProvider>>
+	 */
+	private function resolveProviderClasses( Config $config, HookManager $hooks ): array {
+		$default = array(
+			CoreServiceProvider::class,
+			RoutingServiceProvider::class,
+			RestApiServiceProvider::class,
+		);
 
-        if (class_exists(SeoServiceProvider::class)) {
-            $default[] = SeoServiceProvider::class;
-        }
+		// nd-builder, nd-seo, nd-media, nd-discover, nd-workflow, nd-ads,
+		// nd-analytics, nd-cache, nd-search y nd-ai vienen empaquetados dentro
+		// del vendor/ de nd-core (ver composer.json), por eso se registran aquí
+		// en lugar de requerir que cada tema/paquete lo haga.
+		if ( class_exists( BuilderServiceProvider::class ) ) {
+			$default[] = BuilderServiceProvider::class;
+		}
 
-        if (class_exists(MediaServiceProvider::class)) {
-            $default[] = MediaServiceProvider::class;
-        }
+		if ( class_exists( SeoServiceProvider::class ) ) {
+			$default[] = SeoServiceProvider::class;
+		}
 
-        if (class_exists(DiscoverServiceProvider::class)) {
-            $default[] = DiscoverServiceProvider::class;
-        }
+		if ( class_exists( MediaServiceProvider::class ) ) {
+			$default[] = MediaServiceProvider::class;
+		}
 
-        if (class_exists(WorkflowServiceProvider::class)) {
-            $default[] = WorkflowServiceProvider::class;
-        }
+		if ( class_exists( DiscoverServiceProvider::class ) ) {
+			$default[] = DiscoverServiceProvider::class;
+		}
 
-        if (class_exists(AdsServiceProvider::class)) {
-            $default[] = AdsServiceProvider::class;
-        }
+		if ( class_exists( WorkflowServiceProvider::class ) ) {
+			$default[] = WorkflowServiceProvider::class;
+		}
 
-        if (class_exists(AnalyticsServiceProvider::class)) {
-            $default[] = AnalyticsServiceProvider::class;
-        }
+		if ( class_exists( AdsServiceProvider::class ) ) {
+			$default[] = AdsServiceProvider::class;
+		}
 
-        if (class_exists(CacheServiceProvider::class)) {
-            $default[] = CacheServiceProvider::class;
-        }
+		if ( class_exists( AnalyticsServiceProvider::class ) ) {
+			$default[] = AnalyticsServiceProvider::class;
+		}
 
-        if (class_exists(SearchServiceProvider::class)) {
-            $default[] = SearchServiceProvider::class;
-        }
+		if ( class_exists( CacheServiceProvider::class ) ) {
+			$default[] = CacheServiceProvider::class;
+		}
 
-        if (class_exists(AiServiceProvider::class)) {
-            $default[] = AiServiceProvider::class;
-        }
+		if ( class_exists( SearchServiceProvider::class ) ) {
+			$default[] = SearchServiceProvider::class;
+		}
 
-        /** @var list<class-string<ServiceProvider>> $configured */
-        $configured = $config->get('app.providers', []);
+		if ( class_exists( AiServiceProvider::class ) ) {
+			$default[] = AiServiceProvider::class;
+		}
 
-        /** @var list<class-string<ServiceProvider>> $providers */
-        $providers = $hooks->applyFilters(
-            'nd_core/providers',
-            array_values(array_unique([...$default, ...$configured]))
-        );
+		/** @var list<class-string<ServiceProvider>> $configured */
+		$configured = $config->get( 'app.providers', array() );
 
-        return $providers;
-    }
+		/** @var list<class-string<ServiceProvider>> $providers */
+		$providers = $hooks->applyFilters(
+			'nd_core/providers',
+			array_values( array_unique( array( ...$default, ...$configured ) ) )
+		);
+
+		return $providers;
+	}
 }

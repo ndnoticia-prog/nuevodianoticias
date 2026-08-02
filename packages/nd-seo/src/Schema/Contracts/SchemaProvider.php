@@ -6,12 +6,12 @@ namespace NDSeo\Schema\Contracts;
 
 use NDSeo\Context\SeoContext;
 
-interface SchemaProvider
-{
-    public function supports(SeoContext $context): bool;
+interface SchemaProvider {
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function build(SeoContext $context): array;
+	public function supports( SeoContext $context ): bool;
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function build( SeoContext $context ): array;
 }
