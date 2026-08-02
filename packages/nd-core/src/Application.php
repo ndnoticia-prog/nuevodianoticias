@@ -13,6 +13,8 @@ use NDCore\Providers\CoreServiceProvider;
 use NDCore\Providers\RestApiServiceProvider;
 use NDCore\Providers\RoutingServiceProvider;
 use NDCore\Providers\ServiceProvider;
+use NDDiscover\Providers\DiscoverServiceProvider;
+use NDMedia\Providers\MediaServiceProvider;
 use NDSeo\Providers\SeoServiceProvider;
 use Psr\Container\ContainerInterface;
 
@@ -120,15 +122,23 @@ final class Application extends Container
             RestApiServiceProvider::class,
         ];
 
-        // nd-builder y nd-seo vienen empaquetados dentro del vendor/ de nd-core
-        // (ver composer.json), por eso se registran aquí en lugar de requerir
-        // que cada tema/paquete lo haga.
+        // nd-builder, nd-seo, nd-media y nd-discover vienen empaquetados dentro
+        // del vendor/ de nd-core (ver composer.json), por eso se registran aquí
+        // en lugar de requerir que cada tema/paquete lo haga.
         if (class_exists(BuilderServiceProvider::class)) {
             $default[] = BuilderServiceProvider::class;
         }
 
         if (class_exists(SeoServiceProvider::class)) {
             $default[] = SeoServiceProvider::class;
+        }
+
+        if (class_exists(MediaServiceProvider::class)) {
+            $default[] = MediaServiceProvider::class;
+        }
+
+        if (class_exists(DiscoverServiceProvider::class)) {
+            $default[] = DiscoverServiceProvider::class;
         }
 
         /** @var list<class-string<ServiceProvider>> $configured */

@@ -18,6 +18,16 @@ final class HomeContentProvider
 {
     private const NOTICIAS_COUNT = 6;
     private const BREAKING_COUNT = 5;
+    private const DEFAULT_THUMBNAIL_SIZE = 'large';
+
+    /**
+     * Mismo nombre de tamaño que registra `NDDiscover\ImageSizes::FEATURED`
+     * (>=1200px de ancho, requisito de Google Discover), usado solo para la
+     * imagen del bloque hero. Referenciado como cadena literal a propósito
+     * para no acoplar nd-theme a nd-discover: si el tamaño no existe,
+     * postSummary() recurre a "large".
+     */
+    private const HERO_THUMBNAIL_SIZE = 'nd-discover-featured';
 
     /**
      * Categoría usada como marcador editorial de "última hora" hasta que
@@ -65,7 +75,7 @@ final class HomeContentProvider
             return null;
         }
 
-        return new Block('hero', 'home-hero', $this->postSummary($query->posts[0]));
+        return new Block('hero', 'home-hero', $this->postSummary($query->posts[0], self::HERO_THUMBNAIL_SIZE));
     }
 
     private function noticiasBlock(?int $excludePostId): Block
@@ -127,9 +137,13 @@ final class HomeContentProvider
     /**
      * @return array<string, mixed>
      */
-    private function postSummary(WP_Post $post): array
+    private function postSummary(WP_Post $post, string $thumbnailSize = self::DEFAULT_THUMBNAIL_SIZE): array
     {
-        $thumbnail = get_the_post_thumbnail_url($post, 'large');
+        $thumbnail = get_the_post_thumbnail_url($post, $thumbnailSize);
+
+        if ($thumbnail === false && $thumbnailSize !== self::DEFAULT_THUMBNAIL_SIZE) {
+            $thumbnail = get_the_post_thumbnail_url($post, self::DEFAULT_THUMBNAIL_SIZE);
+        }
 
         return [
             'post_id' => $post->ID,

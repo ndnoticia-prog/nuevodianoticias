@@ -15,6 +15,16 @@ final class SeoContextResolver
 {
     private const DESCRIPTION_MAX_LENGTH = 160;
 
+    /**
+     * Mismo nombre de tamaño que registra `NDDiscover\ImageSizes::FEATURED`
+     * (>=1200px de ancho, requisito de Google Discover). Se referencia como
+     * cadena literal a propósito, no como dependencia de Composer, para no
+     * acoplar nd-seo a nd-discover: si el tamaño no existe (nd-discover no
+     * está activo), WordPress simplemente no lo encuentra y se recurre a
+     * "large".
+     */
+    private const FEATURED_IMAGE_SIZE = 'nd-discover-featured';
+
     public function __construct(private readonly Config $config)
     {
     }
@@ -38,7 +48,7 @@ final class SeoContextResolver
 
     private function forSingular(WP_Post $post): SeoContext
     {
-        $thumbnail = get_the_post_thumbnail_url($post, 'large');
+        $thumbnail = $this->featuredImageUrl($post);
 
         return new SeoContext(
             title: get_the_title($post) . ' - ' . (string) get_bloginfo('name'),
@@ -99,6 +109,13 @@ final class SeoContextResolver
             isSingular: false,
             noindex: true,
         );
+    }
+
+    private function featuredImageUrl(WP_Post $post): string|false
+    {
+        $url = get_the_post_thumbnail_url($post, self::FEATURED_IMAGE_SIZE);
+
+        return $url !== false ? $url : get_the_post_thumbnail_url($post, 'large');
     }
 
     private function plainExcerpt(WP_Post $post): string
