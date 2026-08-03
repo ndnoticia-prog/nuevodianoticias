@@ -26,7 +26,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] Bloques: Hero, Noticias, Breaking (plantillas en `template-parts/blocks/`, poblados con contenido real vía `HomeContentProvider` + `WP_Query`).
 - [x] Modo oscuro (atributo `data-theme` + `prefers-color-scheme`, sin parpadeo gracias al script inline en `header.php`) y diseño responsive (SCSS con breakpoints mobile-first).
 - [x] Suite de pruebas unitarias PHPUnit (Brain Monkey) para `nd-builder` (`Block`, `BlockRegistry`, `Renderer`, `TemplateBlockRenderer`, `BuilderServiceProvider`) y para `nd-theme` (`ThemeServiceProvider`).
-- [ ] Pruebas de integración con WordPress real para `HomeContentProvider`: depende de `WP_Query` contra una base de datos real: no es cubrible de forma fiable solo con Brain Monkey (mismo caso que `DatabaseManager`/`Migrator` en alpha.1).
+- [x] Pruebas de integración con WordPress real para `HomeContentProvider`: ver "v0.1.0-beta.1" más abajo.
 - [ ] `nd-theme-0.1.0-alpha.1.zip` instalable, generado por `tools/build/package.sh`.
 - [x] Verificación real con el toolchain instalado: `composer install && composer run check` en verde en `nd-builder` y `nd-theme`; `npm install && npm run build` genera `dist/app.css`/`dist/app.js` correctamente.
 
@@ -40,7 +40,7 @@ Metodología: se avanza de versión únicamente cuando la anterior compila, pasa
 - [x] `nd-seo`: `robots.txt` con directivas `Sitemap:`.
 - [x] `nd-core`: `nd-seo` añadido a `require` (empaquetado) y `SeoServiceProvider` registrado automáticamente en `Application`.
 - [x] Suite de pruebas PHPUnit (Brain Monkey) para las piezas comprobables sin `WP_Post`/`WP_Query` reales (`RobotsMetaBuilder`, `TwitterCardBuilder`, `OrganizationSchema`, `WebSiteSchema`, `RobotsTxtBuilder`, `SchemaOutput`, `SeoServiceProvider`).
-- [ ] Pruebas de integración con WordPress real para `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController`: dependen de `WP_Post`/`WP_Query` reales (mismo caso que `HomeContentProvider` en alpha.2).
+- [x] Pruebas de integración con WordPress real para `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController`: ver "v0.1.0-beta.1" más abajo.
 - [x] `nd-media`: WebP/AVIF vía el filtro nativo `image_editor_output_format` (con detección real de soporte GD); `sizes` responsive alineado a los breakpoints de nd-theme; CDN (`wp_get_attachment_url` + `the_content`); video embebido responsive (oEmbed); podcast (RSS2 `<enclosure>` + namespace de iTunes). Deliberadamente **no** reimplementa `srcset` ni lazy load: ya son nativos de WordPress core desde 4.4/5.5.
 - [x] `nd-discover`: tamaño de imagen destacada `nd-discover-featured` (1200×675, ≥1200px de ancho requerido por Discover), registrado en `after_setup_theme` y consumido por `nd-seo`/`nd-theme` como contrato de nombre de tamaño (sin acoplar esos paquetes a nd-discover).
 - [x] `nd-core`: `nd-media` y `nd-discover` añadidos a `require` (empaquetados) y sus providers registrados automáticamente en `Application`.
@@ -87,7 +87,11 @@ Con esta versión quedan implementados los 13 paquetes de la arquitectura origin
 - [x] `nd-workflow`: 8 pruebas de integración reales para `CalendarRepository` (`WP_Query` con `date_query` y los estados editoriales personalizados) y `EditorialNoteRepository`.
 - [x] `nd-ads`: 14 pruebas de integración reales para `CampaignRepository` (round-trip de campos JSON), `StatsRepository`/`StatsRecorder` (agregación real de impresiones/clics/CTR) y `ClickRedirectController` (`registerRewriteRule`/`registerQueryVar`; `maybeRedirect()` queda fuera deliberadamente — termina en `exit()` tras `wp_safe_redirect()`, sin forma de interceptarlo sin matar el proceso de pruebas).
 - [x] `nd-analytics`: 13 pruebas de integración reales para `AnalyticsRepository` (incluidos los joins reales contra `wp_posts` y `wp_term_relationships`/`wp_term_taxonomy`/`wp_terms`), `PageviewRecorder` y `ImpressionRecorder`. `PageviewRecorderTest` verifica con una petición WordPress real (`go_to()`) la regla ya comprobada a mano en el navegador: un editor viendo su propio artículo no genera pageview, una visita anónima sí.
-- [ ] Pruebas de integración para `nd-search` (`SearchIndexer`, `SearchQueryOverride`), `nd-seo` (`SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema`, `NewsSitemapController`) y `nd-theme` (`HomeContentProvider`): pendientes.
+- [x] `nd-search`: 9 pruebas de integración reales adicionales para `SearchIndexer` (indexado/desindexado automático vía hooks reales, exclusión de revisiones, `reindexAll()`) y `SearchQueryOverride` (sustitución del `LIKE` nativo por el FULLTEXT, disparada con una petición real vía `go_to()`).
+- [x] `nd-seo`: 20 pruebas de integración reales para `SeoContextResolver`, `BreadcrumbBuilder`, `NewsArticleSchema` y `NewsSitemapController`.
+- [x] `nd-theme`: 5 pruebas de integración reales para `HomeContentProvider`.
+
+Con esto quedan resueltas todas las notas "pendiente de pruebas de integración con WordPress real" documentadas desde alpha.1.
 - [x] Cada página de admin verificada contra una instalación de WordPress real en el navegador (no solo pruebas unitarias) — incluye dos bugs reales que solo esa verificación detectó: `AdminMenuServiceProvider` nunca registrado en `Application::resolveProviderClasses()`, y `AssetUrl::for()` devolviendo `''` para paquetes empaquetados en entorno de desarrollo (symlinks de Composer) por resolver `__DIR__` a la ruta canónica real en vez de la ruta relativa al plugin — corregido con `AssetUrl::forPackage()`.
 
 ## v0.1.0-beta
