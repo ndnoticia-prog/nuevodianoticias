@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  composer-check:
+    name: composer check (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - nd-core
+          - nd-builder
+          - nd-theme
+          - nd-seo
+          - nd-media
+          - nd-discover
+          - nd-workflow
+          - nd-ads
+          - nd-analytics
+          - nd-cache
+          - nd-search
+          - nd-ai
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, sodium, mysqli
+          coverage: none
+
+      # composer.lock de cada paquete apunta a los repositorios `path` de
+      # sus hermanos (ver docs/Architecture.md, "Dependencias entre
+      # paquetes") — Composer los resuelve directamente contra las
+      # carpetas hermanas ya presentes en el checkout, sin publicarlas en
+      # ningún registro.
+      - name: composer install (${{ matrix.package }})
+        working-directory: packages/${{ matrix.package }}
+        run: composer install --no-interaction --prefer-dist
+
+      # phpcs (WPCS) + phpstan nivel máximo + phpunit — el mismo comando
+      # que la puerta de calidad documentada en ROADMAP.md ("se avanza de
+      # versión únicamente cuando ... pasa composer run check").
+      - name: composer run check
+        working-directory: packages/${{ matrix.package }}
+        run: composer run check
+
+  theme-assets:
+    name: nd-theme build de assets (Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: npm install
+        working-directory: packages/nd-theme
+        run: npm install --no-fund --no-audit
+
+      - name: npm run build
+        working-directory: packages/nd-theme
+        run: npm run build
+
+      - name: Verificar que el build generó dist/app.css y dist/app.js
+        working-directory: packages/nd-theme
+        run: test -f dist/app.css && test -f dist/app.js
