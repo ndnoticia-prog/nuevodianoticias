@@ -53,7 +53,20 @@ if ( post_password_required() ) {
 	<?php endif; ?>
 
 	<?php if ( comments_open() ) : ?>
-		<?php comment_form(); ?>
+		<?php
+		// `title_reply_before`/`title_reply_after` (no un argumento de
+		// etiqueta aparte) es la única forma que ofrece comment_form() de
+		// cambiar el <h3> que trae por defecto — aquí a <h2>, para no saltar
+		// de <h1> directo a <h3> cuando el artículo todavía no tiene
+		// comentarios (el único <h2> anterior, el de la lista, no se
+		// imprime en ese caso).
+		comment_form(
+			array(
+				'title_reply_before' => '<h2 id="reply-title" class="nd-comments__reply-title">',
+				'title_reply_after'  => '</h2>',
+			)
+		);
+		?>
 	<?php elseif ( have_comments() ) : ?>
 		<p class="nd-comments__closed"><?php esc_html_e( 'Los comentarios están cerrados.', 'nd-theme' ); ?></p>
 	<?php endif; ?>
