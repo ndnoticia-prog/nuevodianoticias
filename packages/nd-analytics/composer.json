@@ -107,6 +107,7 @@
     },
     "scripts": {
         "test": "phpunit --colors=always",
+        "test:integration": "../../tools/wp-tests/phpunit9/vendor/bin/phpunit --colors=always -c phpunit-integration.xml.dist",
         "stan": "phpstan analyse --memory-limit=1G",
         "lint": "phpcs",
         "lint:fix": "phpcbf",
