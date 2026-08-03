@@ -37,8 +37,9 @@ define( 'NDCORE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 /**
  * Verifica requisitos mínimos de entorno antes de cargar nada más.
- * Se ejecuta en admin_init/plugins_loaded para poder desactivarse con seguridad
- * si el entorno no cumple, en lugar de producir un fatal error.
+ * Se comprueba tanto en la activación como en `after_setup_theme` para
+ * poder desactivarse con seguridad si el entorno no cumple, en lugar de
+ * producir un fatal error.
  */
 function meetsRequirements(): bool {
 	return version_compare( PHP_VERSION, MIN_PHP_VERSION, '>=' )
@@ -120,7 +121,7 @@ register_deactivation_hook(
 );
 
 add_action(
-	'plugins_loaded',
+	'after_setup_theme',
 	static function (): void {
 		if ( ! meetsRequirements() ) {
 			deactivateSelfWithNotice(
@@ -135,7 +136,21 @@ add_action(
 			return;
 		}
 
+		// No se arranca en `plugins_loaded`: el tema activo (p. ej. nd-theme)
+		// solo tiene ocasión de añadirse al filtro `nd_core/providers` cuando
+		// WordPress carga su functions.php, lo cual ocurre DESPUÉS de
+		// `plugins_loaded` (entre `setup_theme` y `after_setup_theme`, ver
+		// wp-settings.php). Arrancar en `plugins_loaded` significaba que
+		// Application::resolveProviderClasses() leía ese filtro antes de que
+		// el tema hubiera tenido oportunidad de registrarse — el provider del
+		// tema nunca se incluía, así que nd-theme jamás encolaba sus propios
+		// assets/menús/theme-supports en un sitio real. Prioridad 5 (antes de
+		// la 10 por defecto) para que, si algún ServiceProvider engancha su
+		// propio callback a `after_setup_theme` durante Application::boot(),
+		// WordPress todavía lo recoja en el mismo ciclo de `do_action()` (el
+		// comportamiento estándar de WP_Hook desde 4.7 al añadir un callback
+		// de prioridad igual o mayor mientras el hook ya se está disparando).
 		Application::getInstance()->boot();
 	},
-	0
+	5
 );
