@@ -25,6 +25,14 @@ final class TransientCacheDriver implements CacheDriver {
 	 */
 	private const NULL_SENTINEL = "\0nd_cache_null\0";
 
+	/**
+	 * get_transient()/get_option() devuelven el propio `false` tanto para
+	 * "no cacheado" como para "cacheado como false" — la misma ambigüedad
+	 * que NULL_SENTINEL resuelve para `null`, aplicada aquí a `false` para
+	 * que has()/get() puedan distinguir ambos casos de forma consistente.
+	 */
+	private const FALSE_SENTINEL = "\0nd_cache_false\0";
+
 	public function get( string $key, mixed $default = null ): mixed {
 		$value = get_transient( $this->key( $key ) );
 
@@ -32,11 +40,15 @@ final class TransientCacheDriver implements CacheDriver {
 			return $default;
 		}
 
-		return $value === self::NULL_SENTINEL ? null : $value;
+		if ( $value === self::NULL_SENTINEL ) {
+			return null;
+		}
+
+		return $value === self::FALSE_SENTINEL ? false : $value;
 	}
 
 	public function put( string $key, mixed $value, int $ttlSeconds ): bool {
-		return set_transient( $this->key( $key ), $value === null ? self::NULL_SENTINEL : $value, $ttlSeconds );
+		return set_transient( $this->key( $key ), $this->encode( $value ), $ttlSeconds );
 	}
 
 	public function forget( string $key ): bool {
@@ -60,6 +72,14 @@ final class TransientCacheDriver implements CacheDriver {
 
 	public function has( string $key ): bool {
 		return get_transient( $this->key( $key ) ) !== false;
+	}
+
+	private function encode( mixed $value ): mixed {
+		if ( $value === null ) {
+			return self::NULL_SENTINEL;
+		}
+
+		return $value === false ? self::FALSE_SENTINEL : $value;
 	}
 
 	private function key( string $key ): string {

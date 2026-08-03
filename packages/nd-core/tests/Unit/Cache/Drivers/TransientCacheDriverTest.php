@@ -44,6 +44,41 @@ final class TransientCacheDriverTest extends BrainMonkeyTestCase {
 		self::assertNull( $driver->get( 'updater/latest_release', 'not-cached' ) );
 	}
 
+	/**
+	 * get_transient() devuelve el propio `false` tanto para "no cacheado"
+	 * como (sin este centinela) para "cacheado como false" — sin
+	 * distinguirlos, has()/get() reportarían un valor legítimamente
+	 * cacheado como si nunca se hubiera guardado.
+	 */
+	public function test_a_cached_false_value_round_trips_as_false_not_as_a_cache_miss(): void {
+		$store = array();
+
+		Functions\expect( 'set_transient' )
+			->once()
+			->andReturnUsing(
+				static function ( string $key, mixed $value ) use ( &$store ): bool {
+					$store[ $key ] = $value;
+
+					return true;
+				}
+			);
+
+		Functions\expect( 'get_transient' )
+			->twice()
+			->andReturnUsing(
+				static function ( string $key ) use ( &$store ): mixed {
+					return $store[ $key ] ?? false;
+				}
+			);
+
+		$driver = new TransientCacheDriver();
+
+		$driver->put( 'feature/enabled', false, 3600 );
+
+		self::assertTrue( $driver->has( 'feature/enabled' ) );
+		self::assertFalse( $driver->get( 'feature/enabled', 'not-cached' ) );
+	}
+
 	public function test_an_uncached_key_returns_the_given_default(): void {
 		Functions\expect( 'get_transient' )->once()->andReturn( false );
 
