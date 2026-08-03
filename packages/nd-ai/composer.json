@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-ai",
     "description": "Proveedor de IA desacoplado de ND Platform: OpenAI, Claude, Gemini, DeepSeek y LLM local, para generación asistida de titulares, SEO, resúmenes, redes sociales y más.",
     "type": "library",
-    "version": "0.1.0-alpha.5",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

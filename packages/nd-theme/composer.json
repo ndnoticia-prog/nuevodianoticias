@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-theme",
     "description": "Tema de presentación de ND Platform: layouts, bloques de front-end, modo oscuro y diseño responsive. Sin lógica de negocio propia: consume nd-core (activo como plugin) y nd-builder en tiempo de ejecución.",
     "type": "wordpress-theme",
-    "version": "0.1.0-alpha.1",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

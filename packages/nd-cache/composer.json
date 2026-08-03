@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-cache",
     "description": "Caché de página completa de ND Platform, con invalidación consciente del flujo editorial. No duplica NDCore\\Cache\\CacheManager (caché de objetos/transients/Redis, ya en nd-core): lo usa como backend.",
     "type": "library",
-    "version": "0.1.0-alpha.5",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

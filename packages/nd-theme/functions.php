@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ND_THEME_VERSION', '0.1.0-alpha.1' );
+define( 'ND_THEME_VERSION', '0.1.0' );
 define( 'ND_THEME_DIR', get_template_directory() . '/' );
 define( 'ND_THEME_URI', get_template_directory_uri() );
 

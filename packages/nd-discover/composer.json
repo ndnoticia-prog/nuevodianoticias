@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-discover",
     "description": "Requisitos técnicos de ND Platform para elegibilidad en Google Discover: tamaño de imagen destacada adecuado (>=1200px de ancho).",
     "type": "library",
-    "version": "0.1.0-alpha.3",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

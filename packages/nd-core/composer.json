@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-core",
     "description": "Núcleo de ND Platform: contenedor DI, aplicación, configuración, hooks, eventos, enrutamiento, REST API, base de datos, migraciones, caché, colas, scheduler, seguridad, permisos y activación.",
     "type": "wordpress-plugin",
-    "version": "0.1.0-alpha.1",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

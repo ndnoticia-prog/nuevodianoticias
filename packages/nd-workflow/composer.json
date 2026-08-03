@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-workflow",
     "description": "Flujo editorial de ND Platform: estados editoriales, comentarios internos, asignaciones y calendario.",
     "type": "library",
-    "version": "0.1.0-alpha.4",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

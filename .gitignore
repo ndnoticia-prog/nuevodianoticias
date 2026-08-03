@@ -20,6 +20,7 @@ packages/*/build/
 # Packaged artifacts
 /dist/
 *.zip
+/tools/build/dist/
 
 # Environment
 .env

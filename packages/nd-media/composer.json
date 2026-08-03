@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-media",
     "description": "Optimización multimedia de ND Platform: WebP/AVIF, imágenes responsive, CDN, video embebido responsive y podcast (RSS).",
     "type": "library",
-    "version": "0.1.0-alpha.3",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

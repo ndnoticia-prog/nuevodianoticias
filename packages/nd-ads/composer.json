@@ -2,7 +2,7 @@
     "name": "ndnoticia/nd-ads",
     "description": "Motor de publicidad propio de ND Platform: campañas, segmentación, prioridad, programación y estadísticas. AdSense, Google Ad Manager, HTML, imagen, video y patrocinados.",
     "type": "library",
-    "version": "0.1.0-alpha.4",
+    "version": "0.1.0",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/ndnoticia-prog/nd-platform",
     "authors": [

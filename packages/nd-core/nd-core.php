@@ -4,7 +4,7 @@
  * Plugin Name:       ND Core
  * Plugin URI:        https://github.com/ndnoticia-prog/nd-platform
  * Description:       Núcleo de ND Platform — contenedor de aplicación, servicios y API para el CMS editorial ND.
- * Version:           0.1.0-alpha.1
+ * Version:           0.1.0
  * Requires at least: 6.5
  * Requires PHP:      8.3
  * Author:            ND Platform Engineering
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const VERSION         = '0.1.0-alpha.1';
+const VERSION         = '0.1.0';
 const MIN_PHP_VERSION = '8.3';
 const MIN_WP_VERSION  = '6.5';
 
