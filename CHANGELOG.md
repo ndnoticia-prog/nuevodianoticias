@@ -258,3 +258,22 @@ Con esto quedan resueltas todas las notas "pendiente de pruebas de integración 
 - **`nd-workflow` (JS)**: `calendar.js` construía las URLs de la REST API con concatenación de cadenas ingenua, rota en instalaciones de WordPress con enlaces permanentes "Simple" (la forma por defecto de una instalación nueva), donde `rest_url()` devuelve `?rest_route=...` en vez de la forma "bonita" `/wp-json/...`. Corregido con un helper `apiUrl()` basado en la API `URL`/`URLSearchParams`, reutilizado en todos los paneles de admin nuevos.
 - **`nd-core`**: encontrado durante la auditoría de seguridad — `TransientCacheDriver` tenía el mismo bug del `null` (ver arriba) también para `false`: `get_transient()`/`get_option()` devuelven el propio `false` tanto para "no cacheado" como para "cacheado como `false`", así que `has()`/`get()` no podían distinguirlos. No explotable hoy (ningún consumidor actual cachea `false`), corregido de todos modos con el mismo patrón de centinela (`FALSE_SENTINEL`).
 - **`nd-theme`**: auditoría manual de accesibilidad tras activar el tema por primera vez — `comments.php` saltaba de `<h1>` (título del artículo) a `<h3>` ("Leave a Reply", el encabezado por defecto de `comment_form()` de WordPress core) sin pasar por `<h2>` cuando el artículo todavía no tenía comentarios. Corregido con `title_reply_before`/`title_reply_after` para usar `<h2>`, coherente con el resto de la jerarquía de la página.
+
+## [0.1.0] - Unreleased
+
+### Added
+
+- `tools/build/package.sh`: genera `nd-core-0.1.0.zip` y `nd-theme-0.1.0.zip` instalables. nd-core empaqueta 10 paquetes hermanos vía repositorios `path` de Composer, resueltos en este monorepo como symlinks a la carpeta hermana COMPLETA — y cada hermano declara a su vez repositorios `path` hacia todos los demás (para IDEs/PHPStan/PHPUnit en desarrollo), formando un grafo completamente conectado, no un árbol. El script dereferencia cada symlink de `vendor/ndnoticia/<paquete>` un solo nivel y copia a mano, desde esa ruta ya resuelta, solo las subcarpetas de producción conocidas (`src/`, `assets/`, `config/`) — nunca el `vendor/`/`tests/` propio de cada hermano — y restaura las dependencias de desarrollo completas de nd-core/nd-theme al terminar.
+
+### Changed
+
+- Versión uniforme `0.1.0` en los 12 paquetes (composer.json, cabecera de plugin de `nd-core.php`, cabecera de tema de `style.css`, `ND_THEME_VERSION`), sustituyendo los `alpha.N`/`beta.1` sueltos de cada `composer.json`.
+
+### Fixed
+
+- **`tools/build/package.sh` (durante el desarrollo del propio script, no un bug en producción)**: un primer intento de copiar `vendor/` con `rsync -L`/`cp -RL` (dereferenciar symlinks de forma recursiva) cayó en una explosión combinatoria de ciclos (nd-core → nd-search → nd-core → ...) que agotó la memoria del proceso antes de que la propia detección de ciclos de rsync lo frenara — por el grafo completamente conectado descrito arriba. Nunca llegó a shipear: se detectó y corrigió antes del primer zip generado con éxito.
+
+### Verified
+
+- `composer run check` (PHPCS/WPCS + PHPStan nivel máximo + PHPUnit) en verde en los 12 paquetes, con la versión `0.1.0` ya aplicada.
+- Ambos zips instalados en una instancia de WordPress real y genuinamente limpia — base de datos nueva, sin symlinks al monorepo de desarrollo, sin datos de sesiones de prueba anteriores: instalación desde cero, activación del plugin, activación del tema, verificación del front-end (assets cargando, modo oscuro funcionando, contenido por defecto de WordPress renderizado) y de las 6 páginas de administración. `debug.log` completamente vacío en todo el proceso: cero errores, warnings, notices o deprecations.

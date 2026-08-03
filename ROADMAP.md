@@ -107,4 +107,9 @@ Con esto quedan resueltas todas las notas "pendiente de pruebas de integración 
 
 ## v0.1.0
 
-- [ ] `nd-core-0.1.0.zip` y `nd-theme-0.1.0.zip` generados, instalados en una instancia WordPress limpia sin errores, con `composer run check` en verde en los 13 paquetes.
+- [x] Versión uniforme `0.1.0` en los 12 paquetes reales (composer.json, cabecera de plugin de `nd-core.php`, cabecera de tema de `style.css`, `ND_THEME_VERSION`) — sustituye los distintos `alpha.N`/`beta.1` sueltos. ("13 paquetes" en el conteo original incluía `nd-api`, deliberadamente nunca creado — ver la nota al final de alpha.5.)
+- [x] `tools/build/package.sh`: genera `nd-core-0.1.0.zip` y `nd-theme-0.1.0.zip` reales. La parte no trivial: nd-core empaqueta 10 paquetes hermanos vía repositorios `path` de Composer, resueltos en este monorepo como symlinks a la carpeta hermana COMPLETA — y cada hermano declara a su vez repositorios `path` hacia todos los demás (para IDEs/PHPStan/PHPUnit en desarrollo), formando un grafo completamente conectado. Dereferenciar symlinks de forma recursiva (`rsync -L`) cae en una explosión combinatoria de ciclos antes de que la propia detección de ciclos de rsync lo frene. Solución: resolver cada symlink un solo nivel y copiar a mano, desde esa ruta ya resuelta, solo las subcarpetas de producción conocidas (`src/`, `assets/`, `config/`) — nunca el `vendor/`/`tests/` propio de cada hermano.
+- [x] `composer run check` (PHPCS/WPCS + PHPStan nivel máximo + PHPUnit) en verde en los 12 paquetes, con la versión `0.1.0` ya aplicada.
+- [x] Ambos zips instalados en una instancia de WordPress real y genuinamente limpia (base de datos nueva, sin symlinks al monorepo de desarrollo, sin datos de las sesiones de prueba anteriores): instalación, activación del plugin, activación del tema y verificación del front-end (assets cargando, modo oscuro, "Hello world!" renderizado) y de las 6 páginas de administración — `debug.log` completamente vacío en todo el proceso, cero errores/warnings/notices/deprecations.
+
+Con esto se completa la lista de verificación de `v0.1.0-beta` y `v0.1.0`: ND Platform queda en un estado instalable y verificado de punta a punta.
