@@ -92,13 +92,16 @@ Con esta versión quedan implementados los 13 paquetes de la arquitectura origin
 - [x] `nd-theme`: 5 pruebas de integración reales para `HomeContentProvider`.
 
 Con esto quedan resueltas todas las notas "pendiente de pruebas de integración con WordPress real" documentadas desde alpha.1.
+
+- [x] Auditoría de seguridad de toda la superficie REST/admin (permisos, escapado de salida, nonces, redirecciones): capability checks explícitos en las 6 rutas nuevas de esta versión, confirmados contra el diseño ya "fail-closed" de `Route` (`permission_callback` deniega por defecto si no se pasa uno explícito — no hay forma de registrar una ruta accidentalmente pública). Verificado que ningún paquete de los 13 llama a `register_rest_route()` directamente (todos pasan por `Router`, ninguno usa `__return_true`). Escapado de salida ya forzado por WPCS en cada `composer check` (0 errores en los 13 paquetes). El único endpoint público sin capability check (`/nd-ads/click/{id}`) resuelve el destino en servidor a partir del ID de campaña, nunca de un parámetro de la petición — sin riesgo de open-redirect, ya documentado desde alpha.4.
+- [x] `nd-core`: encontrado y corregido durante la auditoría — `TransientCacheDriver` tenía el mismo bug de `null` (ver más arriba) también para `false`: `has()`/`get()` no distinguían "no cacheado" de "cacheado como false". No explotable hoy (ningún consumidor actual cachea `false`), corregido de todos modos con el mismo patrón de centinela.
 - [x] Cada página de admin verificada contra una instalación de WordPress real en el navegador (no solo pruebas unitarias) — incluye dos bugs reales que solo esa verificación detectó: `AdminMenuServiceProvider` nunca registrado en `Application::resolveProviderClasses()`, y `AssetUrl::for()` devolviendo `''` para paquetes empaquetados en entorno de desarrollo (symlinks de Composer) por resolver `__DIR__` a la ruta canónica real en vez de la ruta relativa al plugin — corregido con `AssetUrl::forPackage()`.
 
 ## v0.1.0-beta
 
 - [ ] Integración completa entre los 13 paquetes vía `nd-core`.
 - [ ] Auditoría de accesibilidad y Core Web Vitals.
-- [ ] Hardening de seguridad (sanitización, nonces, capacidades) en toda la superficie REST/admin.
+- [x] Hardening de seguridad (sanitización, nonces, capacidades) en toda la superficie REST/admin: ver "v0.1.0-beta.1" más arriba.
 - [ ] Documentación completa (`Architecture.md`, `API.md`) actualizada.
 
 ## v0.1.0
