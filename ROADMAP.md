@@ -102,7 +102,7 @@ Con esto quedan resueltas todas las notas "pendiente de pruebas de integración 
 - [ ] Integración completa entre los 13 paquetes vía `nd-core`.
 - [ ] Auditoría de accesibilidad y Core Web Vitals.
 - [x] Hardening de seguridad (sanitización, nonces, capacidades) en toda la superficie REST/admin: ver "v0.1.0-beta.1" más arriba.
-- [ ] Documentación completa (`Architecture.md`, `API.md`) actualizada.
+- [x] Documentación completa (`Architecture.md`, `API.md`) actualizada con el menú de admin compartido, la infraestructura de pruebas de integración y los 14 endpoints REST nuevos de v0.1.0-beta.1.
 
 ## v0.1.0
 
