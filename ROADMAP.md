@@ -101,7 +101,7 @@ Con esto quedan resueltas todas las notas "pendiente de pruebas de integración 
 ## v0.1.0-beta
 
 - [x] Integración completa entre los 13 paquetes vía `nd-core`: ver "v0.1.0-beta.1" más arriba — se encontró y corrigió un bug crítico real (`nd-theme` nunca arrancaba en un sitio real, por un orden de hooks incorrecto entre `plugins_loaded` y la carga del `functions.php` del tema activo) precisamente al verificar esta integración por primera vez con el tema realmente activo.
-- [ ] Auditoría de accesibilidad y Core Web Vitals.
+- [ ] Auditoría de accesibilidad y Core Web Vitals: parcial. Con nd-theme ya activo en un sitio real (ver arriba), se hizo una revisión manual de `single.php`/`comments.php` — estructura semántica (`banner`/`nav`/`main`/`article`/`contentinfo`, enlace "saltar al contenido"), texto alternativo de imágenes, y contraste de color en ambos modos (claro y oscuro), todos correctos o ya corregidos (ver "Fixed" de `v0.1.0-beta.1` en el CHANGELOG). **No** cubre: Core Web Vitals reales (LCP/CLS/INP), que requieren Lighthouse/PageSpeed Insights, no disponibles en este entorno; ni una auditoría automatizada (axe-core o similar) del resto de plantillas (`archive.php`, `search.php`, `front-page.php` con múltiples bloques, formularios de admin).
 - [x] Hardening de seguridad (sanitización, nonces, capacidades) en toda la superficie REST/admin: ver "v0.1.0-beta.1" más arriba.
 - [x] Documentación completa (`Architecture.md`, `API.md`) actualizada con el menú de admin compartido, la infraestructura de pruebas de integración y los 14 endpoints REST nuevos de v0.1.0-beta.1.
 
